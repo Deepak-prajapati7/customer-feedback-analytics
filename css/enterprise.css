@@ -100,8 +100,35 @@ textarea:focus-visible {
   border-radius: 0;
 }
 
-.sidebar-close-btn {
+.sidebar .sidebar-close-btn {
   display: none;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  margin-left: auto;
+  border-color: color-mix(in srgb, var(--primary) 18%, var(--line));
+  border-radius: 10px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+  transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.sidebar .sidebar-close-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--primary) 24%, transparent);
+}
+
+.sidebar .sidebar-close-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.sidebar .sidebar-close-btn:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: 2px;
 }
 
 .sidebar-nav {
@@ -1356,9 +1383,8 @@ body.theme-dark .primary-btn:hover {
     width: 150px;
   }
 
-  .sidebar-close-btn {
+  .sidebar .sidebar-close-btn {
     display: grid;
-    flex: 0 0 36px;
   }
 
   .main-panel {
