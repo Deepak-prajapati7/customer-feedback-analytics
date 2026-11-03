@@ -8,6 +8,8 @@ function renderDashboard() {
 
   const reviews = getReviews();
   const selectedRange = document.getElementById('dateRangeFilter')?.value || getSettings().dateRange || '30';
+  const customDateRange = document.getElementById('customDateRange');
+  if (customDateRange) customDateRange.hidden = selectedRange !== 'custom';
   const categoryFilter = document.getElementById('dashboardCategoryFilter');
   const categories = [...new Set(reviews.map((review) => review.category).filter(Boolean))].sort();
   if (categoryFilter) {
@@ -16,7 +18,12 @@ function renderDashboard() {
       categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('');
     categoryFilter.value = categories.includes(previousValue) ? previousValue : 'all';
   }
-  const filtered = filterReviewsByDate(reviews, selectedRange)
+  const filtered = filterReviewsByDate(
+    reviews,
+    selectedRange,
+    document.getElementById('customDateFrom')?.value,
+    document.getElementById('customDateTo')?.value
+  )
     .filter((review) => !categoryFilter || categoryFilter.value === 'all' || review.category === categoryFilter.value);
 
   const totalReviews = filtered.length;
@@ -475,7 +482,7 @@ function renderRecentReviews(reviews) {
     return `
       <div class="recent-review-row" role="row">
         <div class="recent-review-customer" role="cell">
-          <span class="review-identity tone-${colorIndex}">${initial}</span>
+          <span class="review-identity tone-${colorIndex}">${escapeHtml(initial)}</span>
           <span class="recent-review-name">
             <strong>${escapeHtml(review.customerName || 'Customer')}</strong>
             <small>${escapeHtml(review.product || 'Feedback')}</small>
@@ -614,6 +621,13 @@ function renderNotificationList() {
 
 function setupDashboardInteractions() {
   const dateFilter = document.getElementById('dateRangeFilter');
+  const savedRange = getSettings().dateRange;
+  if (dateFilter && savedRange) dateFilter.value = savedRange;
+  const savedSettings = getSettings();
+  const customDateFrom = document.getElementById('customDateFrom');
+  const customDateTo = document.getElementById('customDateTo');
+  if (customDateFrom) customDateFrom.value = savedSettings.customDateFrom || '';
+  if (customDateTo) customDateTo.value = savedSettings.customDateTo || '';
   if (dateFilter) {
     dateFilter.addEventListener('change', () => {
       const settings = getSettings();
@@ -622,6 +636,14 @@ function setupDashboardInteractions() {
       renderDashboard();
     });
   }
+  ['customDateFrom', 'customDateTo'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('change', (event) => {
+      const settings = getSettings();
+      settings[id] = event.target.value;
+      saveSettings(settings);
+      renderDashboard();
+    });
+  });
   document.getElementById('dashboardCategoryFilter')?.addEventListener('change', () => renderDashboard());
 
   const globalSearch = document.getElementById('globalSearch');

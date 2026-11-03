@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ['rating', 'product', 'category'].forEach((name) => window.chartInstances?.[name]?.resize());
           });
         }
+        if (target === 'reports-view') renderReportSummary();
+        if (target === 'complaints-view') renderComplaints();
         document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item === targetNavButton));
         const titleElement = document.getElementById('pageTitle');
         const pageTitle = targetNavButton?.textContent.trim() || button.textContent.trim();
@@ -179,17 +181,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('resetDemoDataBtn')?.addEventListener('click', () => {
     if (window.confirm('Reset workspace to initial sample customer feedback?')) {
       resetToSampleData();
+      localStorage.removeItem('feedbackpro_complaints');
       renderDashboard();
       renderReviewsTable(getReviews());
+      renderComplaints();
     }
   });
 
   document.getElementById('clearAllDataBtn')?.addEventListener('click', () => {
     if (window.confirm('Clear all review records? You can restore sample data anytime.')) {
-      saveReviews([]);
+      if (!saveReviews([])) return;
+      localStorage.removeItem('feedbackpro_complaints');
       showToast('All review records cleared', 'success');
       renderDashboard();
       renderReviewsTable(getReviews());
+      renderComplaints();
     }
   });
 

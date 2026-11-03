@@ -107,7 +107,7 @@ function renderReviewsTable(reviews) {
       <tr>
         <td>
           <div class="customer-cell">
-            <div class="avatar-circle tone-${colorIndex}">${initial}</div>
+            <div class="avatar-circle tone-${colorIndex}">${escapeHtml(initial)}</div>
             <div class="customer-info">
               <strong class="customer-name">${escapeHtml(review.customerName || 'Anonymous')}</strong>
               <small class="customer-email">${escapeHtml(review.email || '')}</small>
@@ -197,7 +197,7 @@ function renderReviewsTable(reviews) {
       if (window.confirm('Are you sure you want to delete this customer review?')) {
         const reviews = getReviews();
         const updated = reviews.filter((item) => item.id !== id);
-        saveReviews(updated);
+        if (!saveReviews(updated)) return;
         showToast('Review removed from workspace.', 'success');
         renderReviewsTable(updated);
         if (typeof renderDashboard === 'function') renderDashboard();
@@ -219,7 +219,7 @@ function openReviewModal(review) {
     <div class="review-modal-wrap">
       <div class="review-modal-header">
         <div class="modal-customer-info">
-          <div class="avatar-circle-lg tone-${colorIndex}">${initial}</div>
+          <div class="avatar-circle-lg tone-${colorIndex}">${escapeHtml(initial)}</div>
           <div>
             <h3 class="modal-customer-name">${escapeHtml(review.customerName || 'Anonymous')}</h3>
             <span class="modal-customer-meta">
@@ -253,7 +253,7 @@ function openReviewModal(review) {
           <span class="score-label">Recommendation</span>
           <span class="recom-badge ${review.recommendation === 'Yes' ? 'recom-yes' : review.recommendation === 'No' ? 'recom-no' : 'recom-maybe'}">
             <i class="fa-solid ${review.recommendation === 'Yes' ? 'fa-thumbs-up' : review.recommendation === 'No' ? 'fa-thumbs-down' : 'fa-minus'}"></i>
-            ${review.recommendation || 'Yes'}
+            ${escapeHtml(review.recommendation || 'Yes')}
           </span>
         </div>
         <div class="score-item">
@@ -370,7 +370,7 @@ function openReviewModal(review) {
       reviews[index].reply = text;
       reviews[index].responseStatus = 'responded';
       reviews[index].replyDate = new Date().toISOString();
-      saveReviews(reviews);
+      if (!saveReviews(reviews)) return;
 
       // Add audit notification
       const notifications = getNotifications();
@@ -397,7 +397,7 @@ function openReviewModal(review) {
     if (index >= 0) {
       const nextStatus = reviews[index].responseStatus === 'responded' ? 'pending' : 'responded';
       reviews[index].responseStatus = nextStatus;
-      saveReviews(reviews);
+      if (!saveReviews(reviews)) return;
       showToast(`Review status updated to ${nextStatus}.`, 'success');
       renderReviewsTable(reviews);
       if (typeof renderDashboard === 'function') renderDashboard();
@@ -427,13 +427,17 @@ function exportReviewsCsv(reviews) {
     ])
   ];
 
-  const csv = rows.map((row) => row.map((cell) => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+  const csv = rows.map((row) => row.map((cell) => {
+    const value = String(cell || '');
+    const safeValue = /^[\s]*[=+\-@]/.test(value) ? `'${value}` : value;
+    return `"${safeValue.replace(/"/g, '""')}"`;
+  }).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = `feedbackpro_reviews_${new Date().toISOString().slice(0, 10)}.csv`;
   link.click();
-  URL.revokeObjectURL(link.href);
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
   showToast('Reviews exported as CSV successfully!', 'success');
 }
 

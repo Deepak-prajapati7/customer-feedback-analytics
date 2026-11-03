@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!text) {
       sentimentLivePill.className = 'sentiment-live-pill';
-      sentimentLiveText.textContent = 'AI Sentiment: Start typing your review...';
+      sentimentLiveText.textContent = 'Local sentiment: Start typing your review...';
       return;
     }
 
@@ -90,11 +90,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const result = analyzeSentiment(text, Number(document.getElementById('ratingValue')?.value || 0));
       sentimentLivePill.className = `sentiment-live-pill tone-${result.sentiment.toLowerCase()}`;
       if (result.sentiment === 'Positive') {
-        sentimentLiveText.innerHTML = `<strong>AI Sentiment: Positive</strong> ✨ (Score: +${result.score})`;
+        sentimentLiveText.innerHTML = `<strong>Local sentiment: Positive</strong> ✨ (Score: +${result.score})`;
       } else if (result.sentiment === 'Negative') {
-        sentimentLiveText.innerHTML = `<strong>AI Sentiment: Critical / Needs Attention</strong> ⚠️ (Score: ${result.score})`;
+        sentimentLiveText.innerHTML = `<strong>Local sentiment: Critical / Needs Attention</strong> ⚠️ (Score: ${result.score})`;
       } else {
-        sentimentLiveText.innerHTML = `<strong>AI Sentiment: Balanced / Constructive</strong> 💬`;
+        sentimentLiveText.innerHTML = `<strong>Local sentiment: Balanced / Constructive</strong> 💬`;
       }
     }
   });
@@ -143,7 +143,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const reviews = getReviews();
       reviews.unshift(newReview);
-      saveReviews(reviews);
+      if (!saveReviews(reviews)) {
+        if (btnText) btnText.classList.remove('hidden');
+        if (btnLoader) btnLoader.classList.add('hidden');
+        return;
+      }
 
       const settings = getSettings();
       settings.dateRange = '30';
@@ -168,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (titleCounter) titleCounter.textContent = '0';
       if (reviewCounter) reviewCounter.textContent = '0';
       if (sentimentLivePill) sentimentLivePill.className = 'sentiment-live-pill';
-      if (sentimentLiveText) sentimentLiveText.textContent = 'AI Sentiment: Start typing your review...';
+      if (sentimentLiveText) sentimentLiveText.textContent = 'Local sentiment: Start typing your review...';
 
       showToast('Thank you! Your feedback has been submitted successfully.', 'success');
       setTimeout(() => {

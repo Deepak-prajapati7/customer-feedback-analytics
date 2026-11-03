@@ -22,7 +22,7 @@ function renderAdvancedInsights() {
     </div>
     <div class="insight-panel">
       <h3>Most appreciated product features</h3>
-      <p>${mostPopular ? `${mostPopular.product} leads with ${mostPopular.avg} star rating.` : 'No data yet.'}</p>
+      <p>${mostPopular ? `${escapeHtml(mostPopular.product)} leads with ${mostPopular.avg} star rating.` : 'No data yet.'}</p>
     </div>
     <div class="insight-panel">
       <h3>Most common complaints</h3>
@@ -30,7 +30,7 @@ function renderAdvancedInsights() {
     </div>
     <div class="insight-panel">
       <h3>Products with lowest ratings</h3>
-      <p>${lowest ? `${lowest.product} averages ${lowest.avg} stars.` : 'No rating comparison yet.'}</p>
+      <p>${lowest ? `${escapeHtml(lowest.product)} averages ${lowest.avg} stars.` : 'No rating comparison yet.'}</p>
     </div>
     <div class="insight-panel">
       <h3>Customer satisfaction</h3>

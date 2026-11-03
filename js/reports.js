@@ -52,8 +52,42 @@ function renderReportSummary() {
   `;
 }
 
+function exportReportCsv() {
+  const summary = buildReportSummary();
+  const rows = [
+    ['Metric', 'Value'],
+    ['Total reviews', summary.total],
+    ['Average rating', summary.avgRating.toFixed(1)],
+    ['Positive', summary.positive],
+    ['Neutral', summary.neutral],
+    ['Negative', summary.negative],
+    [],
+    ['Key insights'],
+    ...summary.insights.map((item) => [item]),
+    [],
+    ['Recommendations'],
+    ...summary.recommendations.map((item) => [item])
+  ];
+  const csv = rows.map((row) => row.map((cell) => {
+    const value = String(cell ?? '');
+    const safeValue = /^[\s]*[=+\-@]/.test(value) ? `'${value}` : value;
+    return `"${safeValue.replace(/"/g, '""')}"`;
+  }).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `feedbackpro-report_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Summary report exported as CSV.', 'success');
+}
+
 function generateReportPdf() {
-  const { jsPDF } = window.jspdf;
+  const jsPDF = window.jspdf?.jsPDF;
+  if (!jsPDF) {
+    showToast('PDF export is unavailable because the PDF library did not load. Check your internet connection.', 'error');
+    return;
+  }
   const summary = buildReportSummary();
   const doc = new jsPDF();
   doc.setFontSize(18);
@@ -81,5 +115,6 @@ function generateReportPdf() {
 document.addEventListener('DOMContentLoaded', () => {
   if (document.body.dataset.page === 'dashboard') {
     renderReportSummary();
+    document.getElementById('csvReportBtn')?.addEventListener('click', exportReportCsv);
   }
 });

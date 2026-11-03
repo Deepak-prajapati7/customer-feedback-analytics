@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('forgotPasswordLink')?.addEventListener('click', (event) => {
     event.preventDefault();
-    showToast('Demo password reset link sent to admin@feedbackpro.io', 'success');
+    showToast('Password reset requires a configured authentication service; it is unavailable in this browser demo.', 'error');
   });
 
   loginForm?.addEventListener('submit', (event) => {

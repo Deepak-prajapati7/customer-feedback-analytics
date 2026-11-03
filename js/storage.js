@@ -95,7 +95,14 @@ function getReviews() {
 }
 
 function saveReviews(reviews) {
-  setStoredValue(STORAGE_KEYS.reviews, reviews);
+  try {
+    setStoredValue(STORAGE_KEYS.reviews, reviews);
+    return true;
+  } catch (error) {
+    console.error('Unable to save feedback records.', error);
+    showToast('Feedback could not be saved. Export or remove records to free browser storage.', 'error');
+    return false;
+  }
 }
 
 function getSettings() {
@@ -146,7 +153,7 @@ function clearDemoData() {
 }
 
 function resetToSampleData() {
-  saveReviews(JSON.parse(JSON.stringify(sampleReviews)));
+  if (!saveReviews(JSON.parse(JSON.stringify(sampleReviews)))) return;
   const notifications = [
     { id: crypto.randomUUID(), title: 'Data reset complete', message: 'Your application has been restored to the initial sample dataset.', unread: true, createdAt: new Date().toISOString() }
   ];

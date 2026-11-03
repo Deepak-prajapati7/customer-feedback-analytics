@@ -15,9 +15,11 @@ function getComplaints() {
 function saveComplaints(complaints) {
   try {
     localStorage.setItem(COMPLAINTS_KEY, JSON.stringify(complaints));
+    return true;
   } catch (error) {
     console.error('Unable to save complaint records.', error);
     showToast('Complaint changes could not be saved. Check available browser storage.', 'error');
+    return false;
   }
 }
 
@@ -79,7 +81,7 @@ function createComplaintsFromReviews() {
     showToast(reviews.length ? 'Every negative review is already tracked.' : 'No negative reviews are available to track.', 'info');
     return;
   }
-  saveComplaints([...complaints, ...additions]);
+  if (!saveComplaints([...complaints, ...additions])) return;
   renderComplaints();
   showToast(`${additions.length} complaint${additions.length === 1 ? '' : 's'} created from negative reviews.`, 'success');
 }
@@ -91,7 +93,7 @@ function updateComplaint(event) {
   const complaint = complaints.find((item) => item.id === field.dataset.id);
   if (!complaint) return;
   complaint[field.dataset.field] = field.value.trim();
-  saveComplaints(complaints);
+  if (!saveComplaints(complaints)) return;
   renderComplaints();
 }
 
@@ -267,7 +269,7 @@ function confirmFeedbackImport() {
   if (!readyRows.length) return;
   const reviews = getReviews();
   const cleanRows = readyRows.map(({ rowNumber, importError, duplicate, ...review }) => review);
-  saveReviews([...cleanRows, ...reviews]);
+  if (!saveReviews([...cleanRows, ...reviews])) return;
   pendingImportRows = [];
   document.getElementById('feedbackFileInput').value = '';
   document.getElementById('importPreviewWrap').hidden = true;
@@ -297,6 +299,41 @@ function buildCopilotAnswer(question) {
       ? `${lowest.product} has the lowest average rating in this dataset: ${lowest.avg}/5 across ${lowest.count} review${lowest.count === 1 ? '' : 's'}.`
       : 'There are not enough product ratings to compare.';
     evidence = reviews.filter((review) => review.product === lowest?.product).slice(0, 3);
+  } else if (/\b(highest|best|top)\b/.test(query) && /product|rating|rated/.test(query)) {
+    const ranked = getTopProducts(reviews).map((product) => ({
+      ...product,
+      count: reviews.filter((review) => review.product === product.product).length
+    })).sort((a, b) => b.avg - a.avg);
+    const highest = ranked[0];
+    answer = highest
+      ? `${highest.product} has the highest average rating in this dataset: ${highest.avg}/5 across ${highest.count} review${highest.count === 1 ? '' : 's'}.`
+      : 'There are not enough product ratings to compare.';
+    evidence = reviews.filter((review) => review.product === highest?.product).slice(0, 3);
+  } else if (/trend|month|week|recent/.test(query)) {
+    const monthlyCounts = Array.from({ length: 6 }, (_, index) => {
+      const month = new Date();
+      month.setDate(1);
+      month.setMonth(month.getMonth() - (5 - index));
+      const label = month.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const count = reviews.filter((review) => {
+        const date = new Date(review.createdAt);
+        return date.getMonth() === month.getMonth() && date.getFullYear() === month.getFullYear();
+      }).length;
+      return `${label}: ${count}`;
+    });
+    answer = `Review counts for the last six calendar months are ${monthlyCounts.join('; ')}. These are counts from stored review dates.`;
+    evidence = [...reviews].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 3);
+  } else if (/categor(y|ies)/.test(query)) {
+    const counts = {};
+    reviews.forEach((review) => {
+      const category = review.category || 'Uncategorized';
+      counts[category] = (counts[category] || 0) + 1;
+    });
+    const ranked = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    answer = ranked.length
+      ? `Feedback by category: ${ranked.map(([category, count]) => `${category} (${count})`).join(', ')}.`
+      : 'No categorized reviews are available.';
+    evidence = reviews.slice(0, 3);
   } else if (/negative|complaint|problem|issue|improve|urgent/.test(query)) {
     const topicCounts = {};
     negative.forEach((review) => analyzeSentiment(review.reviewText, review.rating).topics.forEach((topic) => {

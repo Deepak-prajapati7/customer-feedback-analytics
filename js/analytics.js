@@ -1,5 +1,13 @@
-function filterReviewsByDate(reviews, rangeValue) {
+function filterReviewsByDate(reviews, rangeValue, startDate, endDate) {
   const now = new Date();
+  if (rangeValue === 'custom') {
+    const start = startDate ? new Date(`${startDate}T00:00:00`) : null;
+    const end = endDate ? new Date(`${endDate}T23:59:59.999`) : null;
+    return reviews.filter((review) => {
+      const date = new Date(review.createdAt);
+      return (!start || date >= start) && (!end || date <= end);
+    });
+  }
   const filtered = reviews.filter((review) => {
     const date = new Date(review.createdAt);
     if (!rangeValue || rangeValue === 'all') return true;
@@ -45,8 +53,7 @@ function getTopProducts(reviews) {
   });
   return Object.entries(map)
     .map(([product, data]) => ({ product, avg: Number((data.total / data.count).toFixed(1)) }))
-    .sort((a, b) => b.avg - a.avg)
-    .slice(0, 6);
+    .sort((a, b) => b.avg - a.avg);
 }
 
 function buildInsights(reviews) {

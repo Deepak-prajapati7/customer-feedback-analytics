@@ -18,6 +18,9 @@ const INTENSIFIERS = new Set(['very', 'really', 'extremely', 'incredibly', 'so']
 
 function analyzeSentiment(text, rating) {
   const normalized = String(text || '').toLowerCase();
+  const scoreRating = Number.isFinite(Number(rating)) && Number(rating) >= 1 && Number(rating) <= 5
+    ? Number(rating)
+    : 0;
   const tokens = normalized.match(/[a-z']+/g) || [];
   const keywordBreakdown = { positive: [], negative: [], neutral: [] };
   let score = 0;
@@ -36,8 +39,8 @@ function analyzeSentiment(text, rating) {
     previousTokens = [...previousTokens.slice(-2), token];
   });
 
-  if (Number.isFinite(Number(rating)) && Number(rating) > 0) {
-    score += (Number(rating) - 3) * 0.6;
+  if (scoreRating) {
+    score += (scoreRating - 3) * 0.6;
   }
 
   const sentiment = score > 0.35 ? 'Positive' : score < -0.35 ? 'Negative' : 'Neutral';
@@ -47,8 +50,8 @@ function analyzeSentiment(text, rating) {
   const urgent = URGENT_TERMS.some((term) => normalized.includes(term));
   const evidence = [...keywordBreakdown.negative, ...keywordBreakdown.positive].slice(0, 3);
   const explanation = evidence.length
-    ? `Classified as ${sentiment.toLowerCase()} based on ${evidence.join(', ')}${Number(rating) ? ` and a ${Number(rating)}-star rating` : ''}.`
-    : `Classified as ${sentiment.toLowerCase()}${Number(rating) ? ` with a ${Number(rating)}-star rating` : ''}; no strong sentiment terms were detected.`;
+    ? `Classified as ${sentiment.toLowerCase()} based on ${evidence.join(', ')}${scoreRating ? ` and a ${scoreRating}-star rating` : ''}.`
+    : `Classified as ${sentiment.toLowerCase()}${scoreRating ? ` with a ${scoreRating}-star rating` : ''}; no strong sentiment terms were detected.`;
   const topic = topics[0];
   const suggestions = {
     delivery: 'Review shipment tracking and delivery handoffs; follow up with the customer on the delayed order.',
