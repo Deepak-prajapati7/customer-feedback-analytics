@@ -1,0 +1,17 @@
+@media (max-width: 520px) {
+  .auth-card {
+    padding: 1.2rem;
+  }
+
+  .feedback-page-shell {
+    padding: 0.9rem;
+  }
+
+  .brand-wrap {
+    margin-bottom: 1rem;
+  }
+
+  .topbar-left h1 {
+    font-size: 1.3rem;
+  }
+}

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FeedbackPro | Add Feedback</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="stylesheet" href="css/enterprise.css" />
+  </head>
+  <body data-page="feedback" class="theme-light">
+    <div class="feedback-page-shell">
+      <header class="feedback-header">
+        <div class="brand-wrap">
+          <img
+            class="brand-logo"
+            src="assets/images/FeedbackPro%20Analytics%20Logo.png"
+            alt="FeedbackPro - Collect, Analyze, Improve"
+            width="240"
+            height="80"
+          />
+        </div>
+        <div class="header-actions">
+          <a href="index.html" class="secondary-btn"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+        </div>
+      </header>
+
+      <main class="feedback-form-section">
+        <div class="card feedback-card">
+          <div class="section-header compact-header">
+            <div>
+              <p class="eyebrow">Customer feedback</p>
+              <h2>Share your experience</h2>
+            </div>
+          </div>
+
+          <form id="feedbackForm" class="mb-form">
+            <div class="form-grid">
+              <div class="input-group">
+                <label for="customerName">Customer name</label>
+                <input id="customerName" name="customerName" type="text" placeholder="Enter your name" required />
+              </div>
+              <div class="input-group">
+                <label for="email">Email address</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" required />
+              </div>
+              <div class="input-group">
+                <label for="productSelect">Product or service</label>
+                <select id="productSelect" name="productSelect" required>
+                  <option value="">Select a product</option>
+                  <option value="SmartHub Pro">SmartHub Pro</option>
+                  <option value="InsightFlow">InsightFlow</option>
+                  <option value="Nexa CRM">Nexa CRM</option>
+                  <option value="DeliverLoop">DeliverLoop</option>
+                  <option value="PulseDesk">PulseDesk</option>
+                  <option value="Luna Support">Luna Support</option>
+                </select>
+              </div>
+              <div class="input-group">
+                <label for="categorySelect">Feedback category</label>
+                <select id="categorySelect" name="categorySelect" required>
+                  <option value="">Select category</option>
+                  <option value="Product Quality">Product Quality</option>
+                  <option value="Customer Service">Customer Service</option>
+                  <option value="Delivery">Delivery</option>
+                  <option value="Pricing">Pricing</option>
+                  <option value="Website Experience">Website Experience</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="rating-panel">
+              <label>Overall rating</label>
+              <div class="star-rating" id="starRating">
+                <button type="button" class="star-btn" data-value="1"><i class="fa-regular fa-star"></i></button>
+                <button type="button" class="star-btn" data-value="2"><i class="fa-regular fa-star"></i></button>
+                <button type="button" class="star-btn" data-value="3"><i class="fa-regular fa-star"></i></button>
+                <button type="button" class="star-btn" data-value="4"><i class="fa-regular fa-star"></i></button>
+                <button type="button" class="star-btn" data-value="5"><i class="fa-regular fa-star"></i></button>
+              </div>
+              <input type="hidden" id="ratingValue" value="0" required />
+            </div>
+
+            <div class="input-group">
+              <label for="reviewTitle">Review title</label>
+              <input id="reviewTitle" type="text" maxlength="80" placeholder="Give your feedback a brief title" required />
+              <div class="counter"><span id="titleCounter">0</span>/80</div>
+            </div>
+
+            <div class="input-group">
+              <label for="reviewText">Detailed review</label>
+              <textarea id="reviewText" rows="6" maxlength="500" placeholder="Tell us about your experience..." required></textarea>
+              <div class="counter"><span id="reviewCounter">0</span>/500</div>
+            </div>
+
+            <div class="input-group">
+              <label for="recommendation">Would you recommend us?</label>
+              <select id="recommendation" name="recommendation">
+                <option value="Yes">Yes</option>
+                <option value="Maybe">Maybe</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+
+            <div class="form-actions">
+              <button class="primary-btn submit-btn" id="submitFeedbackBtn" type="submit">
+                <span class="btn-text">Submit Review</span>
+                <span class="btn-loader hidden"><i class="fa-solid fa-spinner fa-spin"></i></span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/sentiment.js"></script>
+    <script src="js/feedback.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

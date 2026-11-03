@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FeedbackPro Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="stylesheet" href="css/enterprise.css" />
+  </head>
+  <body class="auth-body theme-light" data-page="login">
+    <div class="auth-shell">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h1>
+            <img
+              class="brand-logo"
+              src="assets/images/FeedbackPro%20Analytics%20Logo.png"
+              alt="FeedbackPro - Collect, Analyze, Improve"
+              width="240"
+              height="80"
+            />
+          </h1>
+          <p>Demo admin portal</p>
+        </div>
+
+        <div class="auth-toggle">
+          <button class="auth-tab active" data-auth-tab="login">Login</button>
+          <button class="auth-tab" data-auth-tab="signup">Sign Up</button>
+        </div>
+
+        <form id="loginForm" class="auth-form active">
+          <div class="input-group">
+            <label>Email</label>
+            <input type="email" id="loginEmail" value="admin@feedbackpro.io" required />
+          </div>
+          <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" value="admin123" required />
+          </div>
+          <button class="primary-btn block-btn" type="submit">Login</button>
+          <a class="link-btn inline-link" href="#" id="forgotPasswordLink">Forgot password?</a>
+        </form>
+
+        <form id="signupForm" class="auth-form">
+          <div class="input-group">
+            <label>Full name</label>
+            <input type="text" id="signupName" placeholder="Jane Admin" required />
+          </div>
+          <div class="input-group">
+            <label>Email</label>
+            <input type="email" id="signupEmail" placeholder="jane@company.com" required />
+          </div>
+          <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="signupPassword" placeholder="Create a password" required />
+          </div>
+          <button class="primary-btn block-btn" type="submit">Create account</button>
+        </form>
+
+        <div class="demo-info">
+          <strong>Demo credentials</strong>
+          <p>Email: admin@feedbackpro.io</p>
+          <p>Password: admin123</p>
+          <small>This is a frontend-only demo. It is not secure production authentication.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

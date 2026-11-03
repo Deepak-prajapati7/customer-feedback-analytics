@@ -1,0 +1,36 @@
+.empty-state {
+  border: 1px dashed var(--line);
+  padding: 1.2rem;
+  border-radius: 12px;
+  text-align: center;
+  color: var(--muted);
+  background: var(--card-soft);
+}
+
+.skeleton-box {
+  height: 84px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(148,163,184,0.15), rgba(148,163,184,0.25), rgba(148,163,184,0.15));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.word-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+
+.word-cloud span {
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(108, 99, 255, 0.08);
+  color: var(--primary);
+  font-weight: 700;
+}

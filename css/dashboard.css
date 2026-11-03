@@ -1,0 +1,97 @@
+.app-shell {
+  background: var(--bg);
+}
+
+.main-panel {
+  background: var(--bg);
+}
+
+.notification-wrapper {
+  position: relative;
+}
+
+.notification-dropdown {
+  padding: 0.4rem;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.8rem 0.4rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.dropdown-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.notification-list {
+  max-height: 320px;
+  overflow: auto;
+  padding: 0.4rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.3rem;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.section-description {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+.action-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.notification-center-list {
+  margin-top: 1rem;
+}
+
+.notification-center-card {
+  align-items: center;
+}
+
+.modal-body-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 0.8rem 1rem;
+}
+
+.modal-body-grid .full {
+  grid-column: 1 / -1;
+}
+
+.modal-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.modal-stat {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.review-detail-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.link-btn.small {
+  font-size: 0.8rem;
+}
