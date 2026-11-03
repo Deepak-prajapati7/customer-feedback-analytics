@@ -44,8 +44,14 @@ document.addEventListener('DOMContentLoaded', () => {
       body.classList.toggle('theme-dark', theme === 'dark');
       body.classList.toggle('theme-light', theme !== 'dark');
       const icon = themeToggle.querySelector('i');
-      icon.classList.toggle('fa-moon', theme !== 'dark');
-      icon.classList.toggle('fa-sun', theme === 'dark');
+      if (icon) {
+        icon.classList.toggle('fa-moon', theme !== 'dark');
+        icon.classList.toggle('fa-sun', theme === 'dark');
+      }
+      const lightModeToggle = document.getElementById('lightModeToggle');
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      if (lightModeToggle) lightModeToggle.checked = theme !== 'dark';
+      if (darkModeToggle) darkModeToggle.checked = theme === 'dark';
     };
     applyTheme(settings.theme || 'light');
     themeToggle.addEventListener('click', () => {
@@ -54,9 +60,27 @@ document.addEventListener('DOMContentLoaded', () => {
       saveSettings(settings);
       applyTheme(next);
       if (typeof renderDashboard === 'function') renderDashboard();
-      showToast(`Theme switched to ${next} mode.`, 'success');
+      showToast(`Switched to ${next} mode`, 'success');
     });
   }
+
+  // Keyboard shortcut: Cmd+K or Ctrl+K to focus search
+  document.addEventListener('keydown', (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      event.preventDefault();
+      const globalSearch = document.getElementById('globalSearch');
+      const reviewSearch = document.getElementById('reviewSearchInput');
+      if (globalSearch && document.getElementById('dashboard-view')?.classList.contains('active')) {
+        globalSearch.focus();
+        globalSearch.select();
+      } else if (reviewSearch) {
+        reviewSearch.focus();
+        reviewSearch.select();
+      } else if (globalSearch) {
+        globalSearch.focus();
+      }
+    }
+  });
 
   const profileTrigger = document.getElementById('profileTrigger');
   if (profileTrigger) {
@@ -127,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const profileName2 = document.getElementById('profileName');
     if (profileName2) profileName2.textContent = nextSettings.displayName || 'Admin';
-    showToast('Profile saved successfully.', 'success');
+    showToast('Profile updated successfully', 'success');
   });
 
   document.getElementById('lightModeToggle')?.addEventListener('change', (event) => {
@@ -137,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
       saveSettings(next);
       applyThemeSelection(body, themeToggle, 'light');
       if (typeof renderDashboard === 'function') renderDashboard();
+      showToast('Light mode enabled', 'success');
     }
   });
 
@@ -147,24 +172,29 @@ document.addEventListener('DOMContentLoaded', () => {
       saveSettings(next);
       applyThemeSelection(body, themeToggle, 'dark');
       if (typeof renderDashboard === 'function') renderDashboard();
+      showToast('Dark mode enabled', 'success');
     }
   });
 
   document.getElementById('resetDemoDataBtn')?.addEventListener('click', () => {
-    resetToSampleData();
-    renderDashboard();
-    renderReviewsTable(getReviews());
+    if (window.confirm('Reset workspace to initial sample customer feedback?')) {
+      resetToSampleData();
+      renderDashboard();
+      renderReviewsTable(getReviews());
+    }
   });
 
   document.getElementById('clearAllDataBtn')?.addEventListener('click', () => {
-    saveReviews([]);
-    showToast('Demo data cleared.', 'success');
-    renderDashboard();
-    renderReviewsTable(getReviews());
+    if (window.confirm('Clear all review records? You can restore sample data anytime.')) {
+      saveReviews([]);
+      showToast('All review records cleared', 'success');
+      renderDashboard();
+      renderReviewsTable(getReviews());
+    }
   });
 
   const authState = ensureAuth();
-  if (page !== 'login' && !authState.isLoggedIn) {
+  if (page !== 'login' && page !== 'feedback' && !authState.isLoggedIn) {
     window.location.href = 'login.html';
   }
 
@@ -182,8 +212,14 @@ document.addEventListener('DOMContentLoaded', () => {
 function applyThemeSelection(body, themeToggle, theme) {
   body.classList.toggle('theme-dark', theme === 'dark');
   body.classList.toggle('theme-light', theme !== 'dark');
+  const lightModeToggle = document.getElementById('lightModeToggle');
+  const darkModeToggle = document.getElementById('darkModeToggle');
+  if (lightModeToggle) lightModeToggle.checked = theme !== 'dark';
+  if (darkModeToggle) darkModeToggle.checked = theme === 'dark';
   if (!themeToggle) return;
   const icon = themeToggle.querySelector('i');
-  icon.classList.toggle('fa-moon', theme !== 'dark');
-  icon.classList.toggle('fa-sun', theme === 'dark');
+  if (icon) {
+    icon.classList.toggle('fa-moon', theme !== 'dark');
+    icon.classList.toggle('fa-sun', theme === 'dark');
+  }
 }

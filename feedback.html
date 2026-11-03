@@ -76,13 +76,16 @@
             </div>
 
             <div class="rating-panel">
-              <label>Overall rating</label>
+              <div class="rating-panel-header">
+                <label>Overall rating</label>
+                <span class="rating-feedback-text" id="ratingFeedbackText">Click a star to rate your experience</span>
+              </div>
               <div class="star-rating" id="starRating">
-                <button type="button" class="star-btn" data-value="1"><i class="fa-regular fa-star"></i></button>
-                <button type="button" class="star-btn" data-value="2"><i class="fa-regular fa-star"></i></button>
-                <button type="button" class="star-btn" data-value="3"><i class="fa-regular fa-star"></i></button>
-                <button type="button" class="star-btn" data-value="4"><i class="fa-regular fa-star"></i></button>
-                <button type="button" class="star-btn" data-value="5"><i class="fa-regular fa-star"></i></button>
+                <button type="button" class="star-btn" data-value="1" aria-label="1 star"><i class="fa-regular fa-star"></i></button>
+                <button type="button" class="star-btn" data-value="2" aria-label="2 stars"><i class="fa-regular fa-star"></i></button>
+                <button type="button" class="star-btn" data-value="3" aria-label="3 stars"><i class="fa-regular fa-star"></i></button>
+                <button type="button" class="star-btn" data-value="4" aria-label="4 stars"><i class="fa-regular fa-star"></i></button>
+                <button type="button" class="star-btn" data-value="5" aria-label="5 stars"><i class="fa-regular fa-star"></i></button>
               </div>
               <input type="hidden" id="ratingValue" value="0" required />
             </div>
@@ -97,15 +100,28 @@
               <label for="reviewText">Detailed review</label>
               <textarea id="reviewText" rows="6" maxlength="500" placeholder="Tell us about your experience..." required></textarea>
               <div class="counter"><span id="reviewCounter">0</span>/500</div>
+              <div class="sentiment-live-pill" id="sentimentLivePill">
+                <span class="pill-dot"></span>
+                <span id="sentimentLiveText">AI Sentiment: Start typing your review...</span>
+              </div>
             </div>
 
             <div class="input-group">
-              <label for="recommendation">Would you recommend us?</label>
-              <select id="recommendation" name="recommendation">
-                <option value="Yes">Yes</option>
-                <option value="Maybe">Maybe</option>
-                <option value="No">No</option>
-              </select>
+              <label>Would you recommend us?</label>
+              <div class="recommendation-cards" id="recommendationCards">
+                <label class="recom-option active">
+                  <input type="radio" name="recommendation" value="Yes" checked />
+                  <span class="recom-card-content"><i class="fa-solid fa-thumbs-up"></i> Yes, highly</span>
+                </label>
+                <label class="recom-option">
+                  <input type="radio" name="recommendation" value="Maybe" />
+                  <span class="recom-card-content"><i class="fa-solid fa-hand"></i> Maybe</span>
+                </label>
+                <label class="recom-option">
+                  <input type="radio" name="recommendation" value="No" />
+                  <span class="recom-card-content"><i class="fa-solid fa-thumbs-down"></i> No</span>
+                </label>
+              </div>
             </div>
 
             <div class="form-actions">

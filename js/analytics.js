@@ -69,11 +69,17 @@ function buildInsights(reviews) {
   const productRatings = getTopProducts(reviews);
   const mostPopularProduct = productRatings[0];
   const negativeDeliveryCount = reviews.filter((review) => review.category === 'Delivery' && review.sentiment === 'Negative').length;
+  const deliveryCount = reviews.filter((review) => review.category === 'Delivery').length;
+  const sentimentDescription = positive > negative
+    ? 'Positive feedback outnumbers negative feedback'
+    : negative > positive
+      ? 'Negative feedback outnumbers positive feedback'
+      : 'Positive and negative feedback are equally represented';
 
   const insightLines = [
-    `${positive >= negative ? 'Customer satisfaction is trending positively' : 'Customer satisfaction needs attention'} with an average rating of ${avgRating.toFixed(1)} across ${total} reviews.`,
+    `${sentimentDescription}; the average rating is ${avgRating.toFixed(1)} across ${total} reviews.`,
     topCategory ? `${topCategory[0]} is the most frequently mentioned category in feedback.` : 'No recurring category yet.',
-    negativeDeliveryCount ? `${negativeDeliveryCount} delivery-related negative reviews highlight a clear area to improve.` : 'Delivery reviews are mostly positive this period.',
+    negativeDeliveryCount ? `${negativeDeliveryCount} of ${deliveryCount} delivery reviews are negative.` : deliveryCount ? `No negative sentiment was detected in ${deliveryCount} delivery reviews.` : 'There are no delivery reviews in this dataset.',
     mostPopularProduct ? `${mostPopularProduct.product} receives the highest average rating at ${mostPopularProduct.avg} stars.` : 'No product performance insight yet.'
   ];
 

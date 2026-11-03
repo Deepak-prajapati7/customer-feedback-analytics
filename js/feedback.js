@@ -3,32 +3,100 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const starButtons = document.querySelectorAll('.star-btn');
   const ratingInput = document.getElementById('ratingValue');
+  const ratingFeedbackText = document.getElementById('ratingFeedbackText');
   const titleInput = document.getElementById('reviewTitle');
   const reviewText = document.getElementById('reviewText');
   const titleCounter = document.getElementById('titleCounter');
   const reviewCounter = document.getElementById('reviewCounter');
   const form = document.getElementById('feedbackForm');
+  const sentimentLivePill = document.getElementById('sentimentLivePill');
+  const sentimentLiveText = document.getElementById('sentimentLiveText');
+
+  const ratingLabels = {
+    1: '★ 1 - Poor experience',
+    2: '★★ 2 - Below average',
+    3: '★★★ 3 - Average & acceptable',
+    4: '★★★★ 4 - Very good & reliable',
+    5: '★★★★★ 5 - Outstanding experience!'
+  };
+
+  const updateStarVisuals = (val) => {
+    starButtons.forEach((star) => {
+      const value = Number(star.dataset.value);
+      const icon = star.querySelector('i');
+      star.classList.toggle('active', value <= val);
+      if (icon) {
+        icon.classList.toggle('fa-solid', value <= val);
+        icon.classList.toggle('fa-regular', value > val);
+      }
+    });
+  };
 
   starButtons.forEach((button) => {
+    const starVal = Number(button.dataset.value);
+
+    button.addEventListener('mouseenter', () => {
+      updateStarVisuals(starVal);
+      if (ratingFeedbackText) {
+        ratingFeedbackText.textContent = ratingLabels[starVal] || 'Click to rate';
+      }
+    });
+
     button.addEventListener('click', () => {
-      const selected = Number(button.dataset.value);
-      ratingInput.value = selected;
-      starButtons.forEach((star) => {
-        const value = Number(star.dataset.value);
-        const icon = star.querySelector('i');
-        star.classList.toggle('active', value <= selected);
-        icon.classList.toggle('fa-solid', value <= selected);
-        icon.classList.toggle('fa-regular', value > selected);
-      });
+      ratingInput.value = starVal;
+      updateStarVisuals(starVal);
+      if (ratingFeedbackText) {
+        ratingFeedbackText.textContent = ratingLabels[starVal];
+        ratingFeedbackText.classList.add('selected');
+      }
+    });
+  });
+
+  const starRatingContainer = document.getElementById('starRating');
+  starRatingContainer?.addEventListener('mouseleave', () => {
+    const selected = Number(ratingInput.value || 0);
+    updateStarVisuals(selected);
+    if (ratingFeedbackText) {
+      ratingFeedbackText.textContent = selected > 0 ? ratingLabels[selected] : 'Click a star to rate your experience';
+    }
+  });
+
+  // Radio recommendation card handler
+  document.querySelectorAll('.recom-option').forEach((option) => {
+    option.addEventListener('click', () => {
+      document.querySelectorAll('.recom-option').forEach((opt) => opt.classList.remove('active'));
+      option.classList.add('active');
     });
   });
 
   titleInput?.addEventListener('input', () => {
-    titleCounter.textContent = titleInput.value.length;
+    if (titleCounter) titleCounter.textContent = titleInput.value.length;
   });
 
+  // Real-time AI sentiment analyzer
   reviewText?.addEventListener('input', () => {
-    reviewCounter.textContent = reviewText.value.length;
+    const text = reviewText.value.trim();
+    if (reviewCounter) reviewCounter.textContent = text.length;
+
+    if (!sentimentLivePill || !sentimentLiveText) return;
+
+    if (!text) {
+      sentimentLivePill.className = 'sentiment-live-pill';
+      sentimentLiveText.textContent = 'AI Sentiment: Start typing your review...';
+      return;
+    }
+
+    if (typeof analyzeSentiment === 'function') {
+      const result = analyzeSentiment(text, Number(document.getElementById('ratingValue')?.value || 0));
+      sentimentLivePill.className = `sentiment-live-pill tone-${result.sentiment.toLowerCase()}`;
+      if (result.sentiment === 'Positive') {
+        sentimentLiveText.innerHTML = `<strong>AI Sentiment: Positive</strong> ✨ (Score: +${result.score})`;
+      } else if (result.sentiment === 'Negative') {
+        sentimentLiveText.innerHTML = `<strong>AI Sentiment: Critical / Needs Attention</strong> ⚠️ (Score: ${result.score})`;
+      } else {
+        sentimentLiveText.innerHTML = `<strong>AI Sentiment: Balanced / Constructive</strong> 💬`;
+      }
+    }
   });
 
   form?.addEventListener('submit', (event) => {
@@ -40,21 +108,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const rating = Number(document.getElementById('ratingValue').value || 0);
     const reviewTitle = document.getElementById('reviewTitle').value.trim();
     const reviewTextValue = document.getElementById('reviewText').value.trim();
-    const recommendation = document.getElementById('recommendation').value;
+    const recommendation = document.querySelector('input[name="recommendation"]:checked')?.value || document.getElementById('recommendation')?.value || 'Yes';
 
     if (!customerName || !email || !product || !category || rating < 1 || !reviewTitle || !reviewTextValue) {
-      showToast('Please complete all required fields before submitting.', 'error');
+      showToast('Please fill out all required fields and select a star rating.', 'error');
       return;
     }
 
     const submitBtn = document.getElementById('submitFeedbackBtn');
     const btnText = submitBtn.querySelector('.btn-text');
     const btnLoader = submitBtn.querySelector('.btn-loader');
-    btnText.classList.add('hidden');
-    btnLoader.classList.remove('hidden');
+    if (btnText) btnText.classList.add('hidden');
+    if (btnLoader) btnLoader.classList.remove('hidden');
 
     setTimeout(() => {
-      const sentiment = analyzeSentiment(reviewTextValue);
+      const sentiment = analyzeSentiment(reviewTextValue, rating);
       const newReview = {
         id: crypto.randomUUID(),
         customerName,
@@ -91,22 +159,21 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       saveNotifications(notifications);
 
-      btnText.classList.remove('hidden');
-      btnLoader.classList.add('hidden');
+      if (btnText) btnText.classList.remove('hidden');
+      if (btnLoader) btnLoader.classList.add('hidden');
       form.reset();
-      starButtons.forEach((star) => {
-        const icon = star.querySelector('i');
-        star.classList.remove('active');
-        icon.classList.remove('fa-solid');
-        icon.classList.add('fa-regular');
-      });
+      updateStarVisuals(0);
       ratingInput.value = '0';
-      titleCounter.textContent = '0';
-      reviewCounter.textContent = '0';
-      showToast('Review submitted successfully!', 'success');
+      if (ratingFeedbackText) ratingFeedbackText.textContent = 'Click a star to rate your experience';
+      if (titleCounter) titleCounter.textContent = '0';
+      if (reviewCounter) reviewCounter.textContent = '0';
+      if (sentimentLivePill) sentimentLivePill.className = 'sentiment-live-pill';
+      if (sentimentLiveText) sentimentLiveText.textContent = 'AI Sentiment: Start typing your review...';
+
+      showToast('Thank you! Your feedback has been submitted successfully.', 'success');
       setTimeout(() => {
         window.location.href = 'index.html';
-      }, 900);
-    }, 900);
+      }, 950);
+    }, 750);
   });
 });

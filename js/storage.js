@@ -80,12 +80,18 @@ function setStoredValue(key, value) {
 
 function getReviews() {
   const reviews = getStoredValue(STORAGE_KEYS.reviews, null);
-  if (!reviews || !reviews.length) {
+  if (!Array.isArray(reviews)) {
     const sample = JSON.parse(JSON.stringify(sampleReviews));
     setStoredValue(STORAGE_KEYS.reviews, sample);
-    return sample;
+    return sample.map((review) => {
+      const analysis = analyzeSentiment(review.reviewText, review.rating);
+      return { ...review, ...analysis };
+    });
   }
-  return reviews;
+  return reviews.map((review) => {
+    const analysis = analyzeSentiment(review.reviewText, review.rating);
+    return { ...review, ...analysis, id: review.id };
+  });
 }
 
 function saveReviews(reviews) {
@@ -115,15 +121,9 @@ function saveNotifications(notifications) {
   setStoredValue(STORAGE_KEYS.notifications, notifications);
 }
 
-function hasRecentDemoData(reviews) {
-  if (!Array.isArray(reviews) || !reviews.length) return false;
-  const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
-  return reviews.some((review) => new Date(review.createdAt).getTime() >= ninetyDaysAgo);
-}
-
 function ensureDemoData() {
   const existingReviews = getStoredValue(STORAGE_KEYS.reviews, null);
-  if (!existingReviews || !hasRecentDemoData(existingReviews)) {
+  if (!Array.isArray(existingReviews)) {
     saveReviews(JSON.parse(JSON.stringify(sampleReviews)));
   }
   if (!localStorage.getItem(STORAGE_KEYS.settings)) {
@@ -131,9 +131,7 @@ function ensureDemoData() {
   }
   if (!localStorage.getItem(STORAGE_KEYS.notifications)) {
     const initialNotifications = [
-      { id: crypto.randomUUID(), title: 'New customer review', message: 'There are 3 fresh reviews waiting to be reviewed.', unread: true, createdAt: new Date().toISOString() },
-      { id: crypto.randomUUID(), title: 'Negative review alert', message: 'Delivery and support issues are trending upward this week.', unread: true, createdAt: new Date(Date.now() - 6*3600000).toISOString() },
-      { id: crypto.randomUUID(), title: 'Pending admin response', message: '3 reviews still need response from your team.', unread: false, createdAt: new Date(Date.now() - 12*3600000).toISOString() }
+      { id: crypto.randomUUID(), title: 'Welcome to FeedbackPro', message: `${Array.isArray(existingReviews) ? existingReviews.length : sampleReviews.length} sample reviews are ready to explore.`, unread: true, createdAt: new Date().toISOString() }
     ];
     saveNotifications(initialNotifications);
   }

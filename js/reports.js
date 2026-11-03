@@ -3,6 +3,20 @@ function buildReportSummary() {
   const sentimentSummary = getSentimentSummary(reviews);
   const total = reviews.length;
   const avgRating = calculateAverageRating(reviews);
+  const negativeReviews = reviews.filter((review) => review.sentiment === 'Negative');
+  const complaintTopics = {};
+  negativeReviews.forEach((review) => analyzeSentiment(review.reviewText, review.rating).topics.forEach((topic) => {
+    complaintTopics[topic] = (complaintTopics[topic] || 0) + 1;
+  }));
+  const recommendations = Object.entries(complaintTopics)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([topic, count]) => `Review ${count} negative review${count === 1 ? '' : 's'} mentioning ${topic} and assign an owner for follow-up.`);
+  if (!recommendations.length && reviews.length) {
+    recommendations.push('No negative reviews are present in this dataset. Continue monitoring incoming feedback.');
+  } else if (!reviews.length) {
+    recommendations.push('No feedback records are available. Import or add reviews to generate data-driven recommendations.');
+  }
   return {
     total,
     avgRating,
@@ -10,11 +24,7 @@ function buildReportSummary() {
     negative: sentimentSummary.Negative || 0,
     neutral: sentimentSummary.Neutral || 0,
     insights: buildInsights(reviews),
-    recommendations: [
-      'Improve delivery response time and shipping accuracy.',
-      'Continue investing in the highest-rated product features.',
-      'Focus support training on recurring service complaints.'
-    ]
+    recommendations
   };
 }
 
@@ -32,11 +42,11 @@ function renderReportSummary() {
     <div class="insight-list" style="margin-top: 1rem;">
       <h3>Key insights</h3>
       <ul>
-        ${summary.insights.map((item) => `<li>${item}</li>`).join('')}
+        ${summary.insights.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
       </ul>
       <h3>Recommendations</h3>
       <ul>
-        ${summary.recommendations.map((item) => `<li>${item}</li>`).join('')}
+        ${summary.recommendations.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
       </ul>
     </div>
   `;

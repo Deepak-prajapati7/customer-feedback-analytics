@@ -1,11 +1,23 @@
 function renderDashboard() {
-  Chart.defaults.font.family = 'Inter, sans-serif';
-  Chart.defaults.font.size = 11;
-  Chart.defaults.color = '#667085';
+  const isDark = document.body.classList.contains('theme-dark');
+  if (typeof Chart !== 'undefined') {
+    Chart.defaults.font.family = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    Chart.defaults.font.size = 11;
+    Chart.defaults.color = isDark ? '#94a3b8' : '#64748b';
+  }
 
   const reviews = getReviews();
   const selectedRange = document.getElementById('dateRangeFilter')?.value || getSettings().dateRange || '30';
-  const filtered = filterReviewsByDate(reviews, selectedRange);
+  const categoryFilter = document.getElementById('dashboardCategoryFilter');
+  const categories = [...new Set(reviews.map((review) => review.category).filter(Boolean))].sort();
+  if (categoryFilter) {
+    const previousValue = categoryFilter.value;
+    categoryFilter.innerHTML = '<option value="all">All categories</option>' +
+      categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`).join('');
+    categoryFilter.value = categories.includes(previousValue) ? previousValue : 'all';
+  }
+  const filtered = filterReviewsByDate(reviews, selectedRange)
+    .filter((review) => !categoryFilter || categoryFilter.value === 'all' || review.category === categoryFilter.value);
 
   const totalReviews = filtered.length;
   const avgRating = calculateAverageRating(filtered);
@@ -14,15 +26,28 @@ function renderDashboard() {
   const neutralCount = filtered.filter((r) => r.sentiment === 'Neutral').length;
   const satisfaction = calculateCustomerSatisfaction(filtered);
 
+  // Dynamic greeting based on current local time
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const welcomeTitle = document.querySelector('.welcome-card h2');
+  if (welcomeTitle) {
+    welcomeTitle.innerHTML = `${greeting}, Admin <span class="wave-emoji">👋</span>`;
+  }
+
+  const welcomeSub = document.querySelector('.welcome-card p:not(.eyebrow)');
+  if (welcomeSub) {
+    welcomeSub.textContent = `${totalReviews} customer reviews analyzed in this period • ${avgRating.toFixed(1)}/5.0 average rating`;
+  }
+
   const kpiGrid = document.getElementById('kpiGrid');
   if (kpiGrid) {
     const cards = [
-      { label: 'Total Reviews', value: totalReviews, detail: 'in selected period', icon: 'fa-comment-dots', tone: 'primary' },
-      { label: 'Average Rating', value: `${avgRating.toFixed(1)}`, detail: 'out of 5 stars', icon: 'fa-star', tone: 'amber' },
-      { label: 'Positive Reviews', value: `${((positiveCount / Math.max(totalReviews, 1)) * 100).toFixed(0)}%`, detail: `${positiveCount} positive reviews`, icon: 'fa-thumbs-up', tone: 'green' },
-      { label: 'Negative Reviews', value: `${((negativeCount / Math.max(totalReviews, 1)) * 100).toFixed(0)}%`, detail: `${negativeCount} reviews`, icon: 'fa-thumbs-down', tone: 'rose' },
-      { label: 'Neutral Reviews', value: `${((neutralCount / Math.max(totalReviews, 1)) * 100).toFixed(0)}%`, detail: `${neutralCount} reviews`, icon: 'fa-face-meh', tone: 'slate' },
-      { label: 'Customer Satisfaction', value: `${satisfaction.toFixed(0)}%`, detail: 'based on review ratings', icon: 'fa-trophy', tone: 'blue' }
+      { label: 'Total Reviews', value: totalReviews, detail: 'in selected period', icon: 'fa-comments', tone: 'primary', badge: 'Current dataset' },
+      { label: 'Average Rating', value: `${avgRating.toFixed(1)}`, detail: 'out of 5.0 stars', icon: 'fa-star', tone: 'amber', badge: `${totalReviews} ratings` },
+      { label: 'Positive Reviews', value: `${((positiveCount / Math.max(totalReviews, 1)) * 100).toFixed(0)}%`, detail: `${positiveCount} positive reviews`, icon: 'fa-thumbs-up', tone: 'green', badge: 'Sentiment share' },
+      { label: 'Negative Reviews', value: `${((negativeCount / Math.max(totalReviews, 1)) * 100).toFixed(0)}%`, detail: `${negativeCount} critical reviews`, icon: 'fa-triangle-exclamation', tone: 'rose', badge: 'Sentiment share' },
+      { label: 'Neutral Reviews', value: `${((neutralCount / Math.max(totalReviews, 1)) * 100).toFixed(0)}%`, detail: `${neutralCount} neutral reviews`, icon: 'fa-face-meh', tone: 'slate', badge: 'Sentiment share' },
+      { label: 'Customer Satisfaction', value: `${satisfaction.toFixed(0)}%`, detail: 'based on review ratings', icon: 'fa-award', tone: 'blue', badge: `${totalReviews} responses` }
     ];
 
     kpiGrid.innerHTML = cards.map((card) => `
@@ -32,7 +57,10 @@ function renderDashboard() {
           <div class="kpi-icon"><i class="fa-solid ${card.icon}"></i></div>
         </div>
         <div class="kpi-value">${card.value}</div>
-        <div class="kpi-meta">${card.detail}</div>
+        <div class="kpi-bottom">
+          <span class="kpi-meta">${card.detail}</span>
+          <span class="kpi-badge tone-${card.tone}">${card.badge}</span>
+        </div>
       </div>
     `).join('');
   }
@@ -54,6 +82,7 @@ function renderDashboard() {
 function renderTrendChart(reviews) {
   const ctx = document.getElementById('trendChart');
   if (!ctx) return;
+  const isDark = document.body.classList.contains('theme-dark');
 
   const monthlyData = Array.from({ length: 6 }, (_, idx) => {
     const date = new Date();
@@ -63,129 +92,313 @@ function renderTrendChart(reviews) {
     return { label, count };
   });
 
-  if (window.chartInstances && window.chartInstances.trend) window.chartInstances.trend.destroy();
-  window.chartInstances = window.chartInstances || {};
-  window.chartInstances.trend = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: monthlyData.map((item) => item.label),
-      datasets: [{
-        label: 'Reviews',
-        data: monthlyData.map((item) => item.count),
-        borderColor: '#6547f5',
-        backgroundColor: 'rgba(101,71,245,0.16)',
-        borderWidth: 2.5,
-        fill: true,
-        tension: 0.3,
-        pointRadius: 3.5,
-        pointHoverRadius: 6,
-        pointBackgroundColor: '#ffffff',
-        pointBorderColor: '#6547f5',
-        pointBorderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false }, border: { display: false } },
-        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(16,24,40,0.06)' }, border: { display: false } }
+  if (typeof Chart !== 'undefined') {
+    const ctx2d = ctx.getContext('2d');
+    const gradient = ctx2d.createLinearGradient(0, 0, 0, 220);
+    gradient.addColorStop(0, isDark ? 'rgba(99, 102, 241, 0.45)' : 'rgba(79, 70, 229, 0.28)');
+    gradient.addColorStop(1, 'rgba(79, 70, 229, 0.00)');
+
+    if (window.chartInstances && window.chartInstances.trend) window.chartInstances.trend.destroy();
+    window.chartInstances = window.chartInstances || {};
+    window.chartInstances.trend = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: monthlyData.map((item) => item.label),
+        datasets: [{
+          label: 'Reviews',
+          data: monthlyData.map((item) => item.count),
+          borderColor: isDark ? '#818cf8' : '#4f46e5',
+          backgroundColor: gradient,
+          borderWidth: 2.8,
+          fill: true,
+          tension: 0.38,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          pointBackgroundColor: isDark ? '#0f172a' : '#ffffff',
+          pointBorderColor: isDark ? '#818cf8' : '#4f46e5',
+          pointBorderWidth: 2.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: isDark ? '#1e293b' : '#0f172a',
+            titleColor: '#ffffff',
+            bodyColor: '#e2e8f0',
+            borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            borderWidth: 1,
+            padding: 10,
+            cornerRadius: 8,
+            displayColors: false
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: isDark ? '#94a3b8' : '#64748b' },
+            border: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0, color: isDark ? '#94a3b8' : '#64748b' },
+            grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)' },
+            border: { display: false }
+          }
+        }
       }
-    }
-  });
+    });
+  } else {
+    // Beautiful resilient SVG chart when Chart.js CDN is unavailable
+    const maxVal = Math.max(...monthlyData.map((d) => d.count), 5);
+    const width = 420;
+    const height = 190;
+    const padX = 35;
+    const padY = 25;
+    const stepX = (width - padX * 2) / (monthlyData.length - 1);
+    const points = monthlyData.map((d, i) => {
+      const x = padX + i * stepX;
+      const y = height - padY - (d.count / maxVal) * (height - padY * 2);
+      return { x, y, ...d };
+    });
+    const pathD = points.reduce((acc, p, i) => {
+      if (i === 0) return `M ${p.x} ${p.y}`;
+      const prev = points[i - 1];
+      const cx = prev.x + (p.x - prev.x) / 2;
+      return `${acc} C ${cx} ${prev.y}, ${cx} ${p.y}, ${p.x} ${p.y}`;
+    }, '');
+    const areaD = `${pathD} L ${points[points.length - 1].x} ${height - padY} L ${points[0].x} ${height - padY} Z`;
+
+    const container = ctx.parentElement;
+    container.innerHTML = `
+      <svg viewBox="0 0 ${width} ${height}" style="width:100%;height:100%;overflow:visible;">
+        <defs>
+          <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${isDark ? '#818cf8' : '#4f46e5'}" stop-opacity="0.32"/>
+            <stop offset="100%" stop-color="${isDark ? '#818cf8' : '#4f46e5'}" stop-opacity="0.0"/>
+          </linearGradient>
+        </defs>
+        <line x1="${padX}" y1="${height - padY}" x2="${width - padX}" y2="${height - padY}" stroke="${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)'}" stroke-dasharray="3,3" />
+        <path d="${areaD}" fill="url(#trendGrad)" />
+        <path d="${pathD}" fill="none" stroke="${isDark ? '#818cf8' : '#4f46e5'}" stroke-width="2.8" stroke-linecap="round" />
+        ${points.map((p) => `
+          <circle cx="${p.x}" cy="${p.y}" r="4" fill="${isDark ? '#0f172a' : '#ffffff'}" stroke="${isDark ? '#818cf8' : '#4f46e5'}" stroke-width="2.5" />
+          <text x="${p.x}" y="${height - 8}" font-size="11" fill="${isDark ? '#94a3b8' : '#64748b'}" text-anchor="middle" font-family="Inter, sans-serif">${p.label}</text>
+          <text x="${p.x}" y="${p.y - 8}" font-size="10" font-weight="700" fill="${isDark ? '#f8fafc' : '#0f172a'}" text-anchor="middle" font-family="Inter, sans-serif">${p.count}</text>
+        `).join('')}
+      </svg>
+    `;
+  }
 }
 
 function renderSentimentChart(reviews) {
   const ctx = document.getElementById('sentimentChart');
   if (!ctx) return;
+  const isDark = document.body.classList.contains('theme-dark');
   const summary = getSentimentSummary(reviews);
   const total = reviews.length || 1;
-  const data = [
-    ((summary.Positive || 0) / total) * 100,
-    ((summary.Negative || 0) / total) * 100,
-    ((summary.Neutral || 0) / total) * 100
-  ];
+  const posPct = Math.round(((summary.Positive || 0) / total) * 100);
+  const negPct = Math.round(((summary.Negative || 0) / total) * 100);
+  const neuPct = Math.max(0, 100 - posPct - negPct);
 
-  if (window.chartInstances && window.chartInstances.sentiment) window.chartInstances.sentiment.destroy();
-  window.chartInstances.sentiment = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Positive', 'Negative', 'Neutral'],
-      datasets: [{
-        data,
-        backgroundColor: ['#17a879', '#ef5365', '#9ba9bf'],
-        borderColor: '#ffffff',
-        borderWidth: 2,
-        hoverOffset: 3
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-  });
+  if (typeof Chart !== 'undefined') {
+    if (window.chartInstances && window.chartInstances.sentiment) window.chartInstances.sentiment.destroy();
+    window.chartInstances = window.chartInstances || {};
+    window.chartInstances.sentiment = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Positive', 'Negative', 'Neutral'],
+        datasets: [{
+          data: [posPct, negPct, neuPct],
+          backgroundColor: ['#10b981', '#f43f5e', '#64748b'],
+          borderColor: isDark ? '#111827' : '#ffffff',
+          borderWidth: 3,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '72%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: isDark ? '#cbd5e1' : '#475569',
+              font: { size: 12, weight: '500' },
+              padding: 16,
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: (item) => ` ${item.label}: ${item.raw}%`
+            }
+          }
+        }
+      }
+    });
+  } else {
+    // High-end SVG donut fallback when Chart.js CDN is unavailable
+    const r = 58;
+    const c = 2 * Math.PI * r;
+    const posStroke = (posPct / 100) * c;
+    const negStroke = (negPct / 100) * c;
+    const neuStroke = (neuPct / 100) * c;
+
+    const container = ctx.parentElement;
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;">
+        <div style="position:relative;width:150px;height:150px;">
+          <svg viewBox="0 0 160 160" style="width:100%;height:100%;transform:rotate(-90deg);">
+            <circle cx="80" cy="80" r="${r}" fill="none" stroke="${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)'}" stroke-width="18" />
+            <circle cx="80" cy="80" r="${r}" fill="none" stroke="#10b981" stroke-width="18" stroke-dasharray="${posStroke} ${c - posStroke}" stroke-dashoffset="0" />
+            <circle cx="80" cy="80" r="${r}" fill="none" stroke="#f43f5e" stroke-width="18" stroke-dasharray="${negStroke} ${c - negStroke}" stroke-dashoffset="-${posStroke}" />
+            <circle cx="80" cy="80" r="${r}" fill="none" stroke="#64748b" stroke-width="18" stroke-dasharray="${neuStroke} ${c - neuStroke}" stroke-dashoffset="-${posStroke + negStroke}" />
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+            <strong style="font-size:1.4rem;font-weight:750;color:${isDark ? '#f8fafc' : '#0f172a'};line-height:1;">${posPct}%</strong>
+            <small style="font-size:0.68rem;color:${isDark ? '#94a3b8' : '#64748b'};margin-top:2px;">Positive</small>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:14px;font-size:0.75rem;color:${isDark ? '#cbd5e1' : '#475569'};font-weight:600;">
+          <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:#10b981;"></span> Positive ${posPct}%</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:#f43f5e;"></span> Negative ${negPct}%</span>
+          <span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:8px;height:8px;border-radius:50%;background:#64748b;"></span> Neutral ${neuPct}%</span>
+        </div>
+      </div>
+    `;
+  }
 }
 
 function renderRatingChart(reviews) {
   const ctx = document.getElementById('ratingChart');
   if (!ctx) return;
+  const isDark = document.body.classList.contains('theme-dark');
   const counts = [1, 2, 3, 4, 5].map((rating) => reviews.filter((review) => Number(review.rating) === rating).length);
+  const maxCount = Math.max(...counts, 1);
 
-  if (window.chartInstances && window.chartInstances.rating) window.chartInstances.rating.destroy();
-  window.chartInstances.rating = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['1★', '2★', '3★', '4★', '5★'],
-      datasets: [{
-        data: counts,
-        backgroundColor: ['#ff647c', '#ffb547', '#9ba9bf', '#518cf5', '#16b889'],
-        borderRadius: 5,
-        maxBarThickness: 30
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false }, border: { display: false } },
-        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(16,24,40,0.06)' }, border: { display: false } }
+  if (typeof Chart !== 'undefined') {
+    if (window.chartInstances && window.chartInstances.rating) window.chartInstances.rating.destroy();
+    window.chartInstances = window.chartInstances || {};
+    window.chartInstances.rating = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['1 Star ★', '2 Stars ★', '3 Stars ★', '4 Stars ★', '5 Stars ★'],
+        datasets: [{
+          data: counts,
+          backgroundColor: ['#f43f5e', '#fb923c', '#94a3b8', '#60a5fa', '#10b981'],
+          borderRadius: 6,
+          maxBarThickness: 34
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: isDark ? '#94a3b8' : '#64748b' },
+            border: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { precision: 0, color: isDark ? '#94a3b8' : '#64748b' },
+            grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)' },
+            border: { display: false }
+          }
+        }
       }
-    }
-  });
+    });
+  } else {
+    // High-end HTML/CSS horizontal rating bars when Chart.js CDN is unavailable
+    const colors = ['#f43f5e', '#fb923c', '#94a3b8', '#60a5fa', '#10b981'];
+    const labels = ['1 Star ★', '2 Stars ★', '3 Stars ★', '4 Stars ★', '5 Stars ★'];
+    const container = ctx.parentElement;
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;justify-content:space-around;height:100%;padding:8px 4px;">
+        ${counts.map((cnt, i) => `
+          <div style="display:flex;align-items:center;gap:10px;font-size:0.75rem;">
+            <span style="width:68px;color:${isDark ? '#cbd5e1' : '#475569'};font-weight:600;">${labels[i]}</span>
+            <div style="flex:1;height:12px;background:${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)'};border-radius:99px;overflow:hidden;">
+              <div style="width:${(cnt / maxCount) * 100}%;height:100%;background:${colors[i]};border-radius:99px;transition:width 0.4s ease;"></div>
+            </div>
+            <strong style="width:28px;text-align:right;color:${isDark ? '#f8fafc' : '#0f172a'};">${cnt}</strong>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
 }
 
 function renderProductChart(reviews) {
   const ctx = document.getElementById('productChart');
   if (!ctx) return;
+  const isDark = document.body.classList.contains('theme-dark');
   const avgByProduct = getTopProducts(reviews).slice(0, 5);
 
-  if (window.chartInstances && window.chartInstances.product) window.chartInstances.product.destroy();
-  window.chartInstances.product = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: avgByProduct.map((item) => item.product),
-      datasets: [{
-        label: 'Avg. Rating',
-        data: avgByProduct.map((item) => item.avg),
-        backgroundColor: '#6554ee',
-        borderRadius: 4
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { beginAtZero: true, max: 5, grid: { color: 'rgba(16,24,40,0.06)' }, border: { display: false } },
-        y: { grid: { display: false }, border: { display: false } }
+  if (typeof Chart !== 'undefined') {
+    if (window.chartInstances && window.chartInstances.product) window.chartInstances.product.destroy();
+    window.chartInstances = window.chartInstances || {};
+    window.chartInstances.product = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: avgByProduct.map((item) => item.product),
+        datasets: [{
+          label: 'Avg. Rating',
+          data: avgByProduct.map((item) => item.avg),
+          backgroundColor: isDark ? '#818cf8' : '#4f46e5',
+          borderRadius: 6,
+          maxBarThickness: 26
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 5,
+            ticks: { color: isDark ? '#94a3b8' : '#64748b' },
+            grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)' },
+            border: { display: false }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: isDark ? '#94a3b8' : '#64748b' },
+            border: { display: false }
+          }
+        }
       }
-    }
-  });
+    });
+  } else {
+    const container = ctx.parentElement;
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;justify-content:space-around;height:100%;padding:10px 4px;">
+        ${avgByProduct.map((item) => `
+          <div style="display:flex;align-items:center;gap:12px;font-size:0.78rem;">
+            <span style="width:110px;font-weight:600;color:${isDark ? '#cbd5e1' : '#334155'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(item.product)}</span>
+            <div style="flex:1;height:12px;background:${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)'};border-radius:99px;overflow:hidden;">
+              <div style="width:${(item.avg / 5) * 100}%;height:100%;background:${isDark ? '#818cf8' : '#4f46e5'};border-radius:99px;"></div>
+            </div>
+            <strong style="width:36px;text-align:right;color:${isDark ? '#f8fafc' : '#0f172a'};">${item.avg.toFixed(1)} ★</strong>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
 }
 
 function renderCategoryChart(reviews) {
   const ctx = document.getElementById('categoryChart');
   if (!ctx) return;
+  const isDark = document.body.classList.contains('theme-dark');
   const categories = reviews.reduce((acc, review) => {
     acc[review.category] = (acc[review.category] || 0) + 1;
     return acc;
@@ -193,21 +406,59 @@ function renderCategoryChart(reviews) {
 
   const labels = Object.keys(categories);
   const data = Object.values(categories);
+  const total = data.reduce((a, b) => a + b, 0) || 1;
+  const palette = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#06b6d4', '#8b5cf6'];
 
-  if (window.chartInstances && window.chartInstances.category) window.chartInstances.category.destroy();
-  window.chartInstances.category = new Chart(ctx, {
-    type: 'polarArea',
-    data: {
-      labels,
-      datasets: [{
-        data,
-        backgroundColor: ['#6554ee', '#17a879', '#f3a83b', '#ef5365', '#2e9ed1', '#a047d1'],
-        borderColor: '#ffffff',
-        borderWidth: 1
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-  });
+  if (typeof Chart !== 'undefined') {
+    if (window.chartInstances && window.chartInstances.category) window.chartInstances.category.destroy();
+    window.chartInstances = window.chartInstances || {};
+    window.chartInstances.category = new Chart(ctx, {
+      type: 'polarArea',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          backgroundColor: palette,
+          borderColor: isDark ? '#111827' : '#ffffff',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: isDark ? '#cbd5e1' : '#475569', padding: 12, usePointStyle: true }
+          }
+        },
+        scales: {
+          r: {
+            grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)' },
+            ticks: { display: false }
+          }
+        }
+      }
+    });
+  } else {
+    const container = ctx.parentElement;
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;justify-content:space-around;height:100%;padding:10px 4px;">
+        ${labels.map((lbl, idx) => `
+          <div style="display:flex;align-items:center;gap:12px;font-size:0.78rem;">
+            <span style="display:inline-flex;align-items:center;gap:6px;width:130px;font-weight:600;color:${isDark ? '#cbd5e1' : '#334155'};">
+              <span style="width:8px;height:8px;border-radius:50%;background:${palette[idx % palette.length]};"></span>
+              ${escapeHtml(lbl)}
+            </span>
+            <div style="flex:1;height:12px;background:${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)'};border-radius:99px;overflow:hidden;">
+              <div style="width:${(data[idx] / total) * 100}%;height:100%;background:${palette[idx % palette.length]};border-radius:99px;"></div>
+            </div>
+            <strong style="width:38px;text-align:right;color:${isDark ? '#f8fafc' : '#0f172a'};">${data[idx]} (${Math.round((data[idx] / total) * 100)}%)</strong>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
 }
 
 function renderRecentReviews(reviews) {
@@ -218,32 +469,44 @@ function renderRecentReviews(reviews) {
     container.innerHTML = '<div class="empty-state">No reviews yet. Add a new feedback record to get started.</div>';
     return;
   }
-  container.innerHTML = recent.map((review) => `
-    <div class="recent-review-row" role="row">
-      <div class="recent-review-customer" role="cell">
-        <span class="review-identity">${escapeHtml((review.customerName || 'A').charAt(0).toUpperCase())}</span>
-        <span class="recent-review-name">
-          <strong>${escapeHtml(review.customerName || 'Customer')}</strong>
-          <small>${escapeHtml(review.product || 'Feedback')}</small>
+  container.innerHTML = recent.map((review) => {
+    const initial = (review.customerName || 'A').charAt(0).toUpperCase();
+    const colorIndex = (review.customerName || 'A').charCodeAt(0) % 6;
+    return `
+      <div class="recent-review-row" role="row">
+        <div class="recent-review-customer" role="cell">
+          <span class="review-identity tone-${colorIndex}">${initial}</span>
+          <span class="recent-review-name">
+            <strong>${escapeHtml(review.customerName || 'Customer')}</strong>
+            <small>${escapeHtml(review.product || 'Feedback')}</small>
+          </span>
+        </div>
+        <span class="recent-review-rating" role="cell" aria-label="${Number(review.rating)} out of 5 stars">
+          <span class="rating-stars">${'★'.repeat(Number(review.rating))}${'☆'.repeat(5 - Number(review.rating))}</span>
+          <strong class="rating-num">${Number(review.rating).toFixed(1)}</strong>
         </span>
+        <span class="${getSentimentClass(review.sentiment || 'Neutral')}" role="cell">
+          <span class="badge-dot"></span>
+          ${escapeHtml(review.sentiment || 'Neutral')}
+        </span>
+        <span class="recent-review-date" role="cell">${formatDate(review.createdAt)}</span>
       </div>
-      <span class="recent-review-rating" role="cell" aria-label="${Number(review.rating)} out of 5 stars">
-        <span class="rating-stars">${'★'.repeat(Number(review.rating))}${'☆'.repeat(5 - Number(review.rating))}</span>
-      </span>
-      <span class="${getSentimentClass(review.sentiment || 'Neutral')}" role="cell">${escapeHtml(review.sentiment || 'Neutral')}</span>
-      <span class="recent-review-date" role="cell">${formatDate(review.createdAt)}</span>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function renderInsights(reviews) {
   const container = document.getElementById('insightsList');
   if (!container) return;
   const lines = buildInsights(reviews);
-  container.innerHTML = lines.map((insight) => `
+  const icons = ['fa-bolt', 'fa-chart-line', 'fa-lightbulb', 'fa-circle-exclamation'];
+  container.innerHTML = lines.map((insight, idx) => `
     <div class="insight-item">
-      <strong>Insight</strong>
-      <span>${insight}</span>
+      <div class="insight-icon"><i class="fa-solid ${icons[idx % icons.length]}"></i></div>
+      <div class="insight-content">
+        <strong>Insight & Recommendation</strong>
+        <span>${escapeHtml(insight)}</span>
+      </div>
     </div>
   `).join('');
 }
@@ -277,8 +540,8 @@ function renderKeywordInsights(reviews) {
   const negativeKeywordsEl = document.getElementById('negativeKeywords');
   if (!positiveKeywordsEl || !negativeKeywordsEl) return;
   const { positive, negative } = aggregateKeywords(reviews);
-  positiveKeywordsEl.innerHTML = positive.length ? positive.map((item) => `<span class="tag-chip">${item.word} (${item.count})</span>`).join('') : '<span class="tag-chip">No data yet</span>';
-  negativeKeywordsEl.innerHTML = negative.length ? negative.map((item) => `<span class="tag-chip">${item.word} (${item.count})</span>`).join('') : '<span class="tag-chip">No data yet</span>';
+  positiveKeywordsEl.innerHTML = positive.length ? positive.map((item) => `<span class="tag-chip chip-positive"><i class="fa-solid fa-arrow-trend-up"></i> ${item.word} (${item.count})</span>`).join('') : '<span class="tag-chip">No data yet</span>';
+  negativeKeywordsEl.innerHTML = negative.length ? negative.map((item) => `<span class="tag-chip chip-negative"><i class="fa-solid fa-arrow-trend-down"></i> ${item.word} (${item.count})</span>`).join('') : '<span class="tag-chip">No data yet</span>';
 }
 
 function renderNotificationCenter() {
@@ -286,7 +549,7 @@ function renderNotificationCenter() {
   if (!container) return;
   const notifications = getNotifications();
   if (!notifications.length) {
-    container.innerHTML = '<div class="empty-state">No notifications available.</div>';
+    container.innerHTML = '<div class="empty-state">No notifications available. All customer feedback is up to date.</div>';
     return;
   }
 
@@ -294,8 +557,8 @@ function renderNotificationCenter() {
     <div class="notification-center-card ${notification.unread ? 'unread' : ''}">
       <div class="notification-icon"><i class="fa-solid fa-bell"></i></div>
       <div class="notification-copy">
-        <strong>${notification.title}</strong>
-        <p>${notification.message}</p>
+        <strong>${escapeHtml(notification.title)}</strong>
+        <p>${escapeHtml(notification.message)}</p>
       </div>
       <button class="text-btn" data-id="${notification.id}">Mark read</button>
     </div>
@@ -324,15 +587,15 @@ function renderNotificationList() {
   if (!list) return;
   const notifications = getNotifications().slice(0, 5);
   if (!notifications.length) {
-    list.innerHTML = '<div class="empty-state">No new alerts.</div>';
+    list.innerHTML = '<div class="empty-state">No new alerts. All caught up!</div>';
     return;
   }
   list.innerHTML = notifications.map((notification) => `
     <div class="notification-item ${notification.unread ? 'unread' : ''}">
       <div class="notification-icon"><i class="fa-solid fa-bell"></i></div>
       <div class="notification-copy">
-        <strong>${notification.title}</strong>
-        <p>${notification.message}</p>
+        <strong>${escapeHtml(notification.title)}</strong>
+        <p>${escapeHtml(notification.message)}</p>
       </div>
       <button class="text-btn small" data-id="${notification.id}">Read</button>
     </div>
@@ -359,6 +622,7 @@ function setupDashboardInteractions() {
       renderDashboard();
     });
   }
+  document.getElementById('dashboardCategoryFilter')?.addEventListener('change', () => renderDashboard());
 
   const globalSearch = document.getElementById('globalSearch');
   if (globalSearch) {
@@ -399,6 +663,7 @@ function setupDashboardInteractions() {
     renderNotificationList();
     renderNotificationCenter();
     updateNotificationBadge();
+    showToast('All notifications marked as read', 'success');
   });
 }
 

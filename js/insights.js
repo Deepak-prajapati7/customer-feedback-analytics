@@ -8,6 +8,12 @@ function renderAdvancedInsights() {
   const sum = getSentimentSummary(reviews);
   const mostPopular = productData[0];
   const lowest = [...productData].sort((a, b) => a.avg - b.avg)[0];
+  const negativeReviews = reviews.filter((review) => review.sentiment === 'Negative');
+  const topicCounts = {};
+  negativeReviews.forEach((review) => analyzeSentiment(review.reviewText, review.rating).topics.forEach((topic) => {
+    topicCounts[topic] = (topicCounts[topic] || 0) + 1;
+  }));
+  const topComplaint = Object.entries(topicCounts).sort((a, b) => b[1] - a[1])[0];
 
   grid.innerHTML = `
     <div class="insight-panel">
@@ -20,19 +26,19 @@ function renderAdvancedInsights() {
     </div>
     <div class="insight-panel">
       <h3>Most common complaints</h3>
-      <p>${sum.Negative ? `${sum.Negative} negative reviews point to service and delivery friction.` : 'No major complaints found.'}</p>
+      <p>${topComplaint ? `${topComplaint[1]} negative review${topComplaint[1] === 1 ? '' : 's'} mention ${escapeHtml(topComplaint[0])}.` : negativeReviews.length ? `${negativeReviews.length} negative reviews need review; no common topic matched confidently.` : 'No negative reviews are present in this dataset.'}</p>
     </div>
     <div class="insight-panel">
       <h3>Products with lowest ratings</h3>
       <p>${lowest ? `${lowest.product} averages ${lowest.avg} stars.` : 'No rating comparison yet.'}</p>
     </div>
     <div class="insight-panel">
-      <h3>Customer satisfaction trend</h3>
-      <p>${calculateCustomerSatisfaction(reviews).toFixed(0)}% satisfaction based on the current review set.</p>
+      <h3>Customer satisfaction</h3>
+      <p>${calculateCustomerSatisfaction(reviews).toFixed(0)}% rating-based satisfaction across ${reviews.length} reviews.</p>
     </div>
     <div class="insight-panel">
       <h3>Actionable recommendations</h3>
-      <p>${sum.Negative ? '35% of negative feedback mentions delivery delays. Consider improving delivery operations and response speed.' : 'Customer sentiment is healthy. Keep strengthening top-performing product features.'}</p>
+      <p>${topComplaint ? `Review the ${escapeHtml(topComplaint[0])} complaints, assign an owner, and follow up with affected customers.` : sum.Negative ? 'Review negative feedback individually and monitor for a recurring topic.' : 'No negative sentiment was detected; continue collecting feedback to validate current performance.'}</p>
     </div>
   `;
 }

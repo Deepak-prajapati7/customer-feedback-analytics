@@ -26,8 +26,19 @@
               height="80"
             />
           </h1>
-          <p>Demo admin portal</p>
+          <p>Enterprise Customer Analytics Portal</p>
+          <div class="auth-feature-tags">
+            <span><i class="fa-solid fa-wand-magic-sparkles"></i> AI Sentiment</span>
+            <span><i class="fa-solid fa-chart-line"></i> Analytics</span>
+            <span><i class="fa-solid fa-reply"></i> Triage & Reply</span>
+          </div>
         </div>
+
+        <button type="button" class="instant-demo-btn" id="instantDemoBtn">
+          <i class="fa-solid fa-bolt"></i> One-Click Demo Login
+        </button>
+
+        <div class="auth-divider"><span>or sign in manually</span></div>
 
         <div class="auth-toggle">
           <button class="auth-tab active" data-auth-tab="login">Login</button>
@@ -36,14 +47,19 @@
 
         <form id="loginForm" class="auth-form active">
           <div class="input-group">
-            <label>Email</label>
+            <label>Email address</label>
             <input type="email" id="loginEmail" value="admin@feedbackpro.io" required />
           </div>
           <div class="input-group">
             <label>Password</label>
-            <input type="password" id="loginPassword" value="admin123" required />
+            <div class="password-input-wrap">
+              <input type="password" id="loginPassword" value="admin123" required />
+              <button type="button" class="password-toggle-btn" id="toggleLoginPassword" aria-label="Toggle password visibility">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
           </div>
-          <button class="primary-btn block-btn" type="submit">Login</button>
+          <button class="primary-btn block-btn" type="submit">Sign In to Dashboard</button>
           <a class="link-btn inline-link" href="#" id="forgotPasswordLink">Forgot password?</a>
         </form>
 
@@ -53,12 +69,17 @@
             <input type="text" id="signupName" placeholder="Jane Admin" required />
           </div>
           <div class="input-group">
-            <label>Email</label>
-            <input type="email" id="signupEmail" placeholder="jane@company.com" required />
+            <label for="signupEmail">Email</label>
+            <input type="email" id="signupEmail" placeholder="jane@company.com" autocomplete="email" required />
           </div>
           <div class="input-group">
-            <label>Password</label>
-            <input type="password" id="signupPassword" placeholder="Create a password" required />
+            <label for="signupPassword">Password</label>
+            <div class="password-input-wrap">
+              <input type="password" id="signupPassword" placeholder="At least 8 characters" minlength="8" autocomplete="new-password" required />
+              <button type="button" class="password-toggle-btn" id="toggleSignupPassword" aria-label="Toggle password visibility">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
           </div>
           <button class="primary-btn block-btn" type="submit">Create account</button>
         </form>

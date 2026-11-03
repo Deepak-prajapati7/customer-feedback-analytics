@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/responsive.css" />
     <link rel="stylesheet" href="css/enterprise.css" />
+    <link rel="stylesheet" href="css/workspace.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -44,6 +45,10 @@
               <i class="fa-solid fa-star"></i>
               <span>Reviews</span>
             </button>
+            <button class="nav-item" data-target="complaints-view">
+              <i class="fa-solid fa-life-ring"></i>
+              <span>Complaint tracking</span>
+            </button>
             <a class="nav-item" href="feedback.html">
               <i class="fa-solid fa-square-plus"></i>
               <span>Add feedback</span>
@@ -63,6 +68,14 @@
               <i class="fa-solid fa-magnifying-glass-chart"></i>
               <span>Customer insights</span>
             </button>
+            <button class="nav-item" data-target="copilot-view">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Insights Copilot</span>
+            </button>
+            <button class="nav-item" data-target="data-view">
+              <i class="fa-solid fa-file-import"></i>
+              <span>Import data</span>
+            </button>
             <button class="nav-item" data-target="reports-view">
               <i class="fa-solid fa-file-lines"></i>
               <span>Reports</span>
@@ -81,8 +94,8 @@
           </div>
         </nav>
         <div class="sidebar-footer">
-          <span class="workspace-indicator"></span>
-          <span><strong>FeedbackPro</strong><small>Business workspace</small></span>
+          <span class="workspace-indicator pulse"></span>
+          <span><strong>FeedbackPro</strong><small>Enterprise Workspace • v2.4</small></span>
         </div>
       </aside>
 
@@ -99,7 +112,8 @@
           <div class="topbar-actions">
             <div class="searchbox">
               <i class="fa-solid fa-magnifying-glass"></i>
-              <input id="globalSearch" type="text" placeholder="Search feedback..." />
+              <input id="globalSearch" type="text" placeholder="Search feedback, customers, products..." />
+              <kbd class="search-kbd">⌘K</kbd>
             </div>
 
             <div class="notification-wrapper">
@@ -160,6 +174,12 @@
                   <option value="30" selected>Last 30 days</option>
                   <option value="90">Last 90 days</option>
                   <option value="custom">Custom date range</option>
+                </select>
+              </div>
+              <div class="date-filter-wrap">
+                <label for="dashboardCategoryFilter">Category</label>
+                <select id="dashboardCategoryFilter">
+                  <option value="all">All categories</option>
                 </select>
               </div>
             </div>
@@ -267,6 +287,24 @@
                 <p class="section-description">Search, triage, and respond to customer feedback.</p>
               </div>
               <button class="primary-btn" id="exportReviewsBtn"><i class="fa-solid fa-download"></i> Export CSV</button>
+            </div>
+
+            <div class="quick-filter-chips" id="quickFilterChips">
+              <button type="button" class="chip active" data-filter="all">
+                <i class="fa-solid fa-list-check"></i> All Reviews <span class="chip-count" id="countAllReviews">0</span>
+              </button>
+              <button type="button" class="chip" data-filter="pending">
+                <i class="fa-solid fa-clock"></i> Needs Reply <span class="chip-count chip-amber" id="countPendingReviews">0</span>
+              </button>
+              <button type="button" class="chip" data-filter="positive">
+                <i class="fa-solid fa-face-smile"></i> Positive <span class="chip-count chip-green" id="countPositiveReviews">0</span>
+              </button>
+              <button type="button" class="chip" data-filter="negative">
+                <i class="fa-solid fa-triangle-exclamation"></i> Critical <span class="chip-count chip-red" id="countNegativeReviews">0</span>
+              </button>
+              <button type="button" class="chip" data-filter="fiveStar">
+                <i class="fa-solid fa-star"></i> 5 Stars <span class="chip-count chip-blue" id="countFiveStarReviews">0</span>
+              </button>
             </div>
 
             <div class="filters-panel card">
@@ -400,6 +438,86 @@
             <div class="insight-grid" id="insightGrid"></div>
           </section>
 
+          <section class="page-view" id="copilot-view">
+            <div class="section-header">
+              <div>
+                <p class="eyebrow">Evidence-based answers</p>
+                <h2>Insights Copilot</h2>
+                <p class="section-description">Ask questions about the feedback in this workspace. Answers use your current review dataset.</p>
+              </div>
+            </div>
+            <div class="copilot-layout card">
+              <div class="copilot-welcome">
+                <span class="copilot-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                <div>
+                  <strong>Ask your feedback data</strong>
+                  <p>Try “What are the most common complaints?” or “How do customers rate delivery?”</p>
+                </div>
+              </div>
+              <div class="copilot-suggestions">
+                <button type="button" class="chip copilot-prompt">What are the most common complaints?</button>
+                <button type="button" class="chip copilot-prompt">Which product has the lowest rating?</button>
+                <button type="button" class="chip copilot-prompt">Summarize negative feedback</button>
+              </div>
+              <div id="copilotConversation" class="copilot-conversation" aria-live="polite"></div>
+              <form id="copilotForm" class="copilot-form">
+                <label class="sr-only" for="copilotQuestion">Ask a question about your feedback</label>
+                <input id="copilotQuestion" type="text" placeholder="Ask a question about your feedback..." maxlength="300" required />
+                <button class="primary-btn" type="submit"><i class="fa-solid fa-arrow-up"></i> Ask</button>
+              </form>
+              <small class="data-disclaimer">Answers are generated from the feedback currently stored in this browser. Import your own data to analyze it.</small>
+            </div>
+          </section>
+
+          <section class="page-view" id="complaints-view">
+            <div class="section-header">
+              <div>
+                <p class="eyebrow">Close the loop</p>
+                <h2>Complaint tracking</h2>
+                <p class="section-description">Turn negative feedback into trackable issues and follow each resolution.</p>
+              </div>
+              <button class="secondary-btn" id="syncComplaintsBtn"><i class="fa-solid fa-rotate"></i> Create from negative reviews</button>
+            </div>
+            <div class="complaint-summary" id="complaintSummary"></div>
+            <div class="table-card card">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Issue</th><th>Customer / product</th><th>Priority</th><th>Assignee</th><th>Status</th><th>Created</th></tr></thead>
+                  <tbody id="complaintsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="page-view" id="data-view">
+            <div class="section-header">
+              <div>
+                <p class="eyebrow">Bring your own data</p>
+                <h2>Import feedback</h2>
+                <p class="section-description">Upload a CSV or Excel file. Review the mapped rows and duplicates before adding them.</p>
+              </div>
+            </div>
+            <div class="card import-card">
+              <label class="import-dropzone" for="feedbackFileInput">
+                <span class="import-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                <strong>Choose a CSV or Excel file</strong>
+                <span>Supported columns: customerName, email, product, category, rating, reviewTitle, reviewText, date</span>
+                <input id="feedbackFileInput" type="file" accept=".csv,.xlsx,.xls,text/csv" />
+              </label>
+              <div class="import-status" id="importStatus" aria-live="polite"></div>
+              <div class="table-wrap import-preview-wrap" id="importPreviewWrap" hidden>
+                <table>
+                  <thead><tr><th>Customer</th><th>Product</th><th>Rating</th><th>Review</th><th>Sentiment</th><th>Import status</th></tr></thead>
+                  <tbody id="importPreviewBody"></tbody>
+                </table>
+              </div>
+              <div class="import-actions" id="importActions" hidden>
+                <span id="importCount"></span>
+                <button type="button" class="primary-btn" id="confirmImportBtn">Import valid feedback</button>
+              </div>
+            </div>
+          </section>
+
           <section class="page-view" id="reports-view">
             <div class="section-header">
               <div>
@@ -495,6 +613,7 @@
     <script src="js/reviews.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/reports.js"></script>
+    <script src="js/workspace.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>
