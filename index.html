@@ -409,13 +409,26 @@
               <div>
                 <p class="eyebrow">Explore the details</p>
                 <h2>Analytics</h2>
-                <p class="section-description">Review patterns across ratings, products, and feedback categories.</p>
+                <p class="section-description">Track volume, satisfaction, sentiment, product performance, and customer themes.</p>
               </div>
+            </div>
+            <div class="analytics-kpi-grid" id="analyticsKpiGrid"></div>
+            <div class="card chart-card analytics-trend-card">
+              <div class="card-header">
+                <div>
+                  <h3>Feedback volume</h3>
+                  <p class="chart-description">Monthly review count from the selected dataset</p>
+                </div>
+              </div>
+              <div class="chart-wrap"><canvas id="analyticsTrendChart"></canvas></div>
             </div>
             <div class="charts-grid analytics-charts">
               <div class="card chart-card">
                 <div class="card-header">
-                  <h3>Product Performance</h3>
+                  <div>
+                    <h3>Product Performance</h3>
+                    <p class="chart-description">Average customer rating by product</p>
+                  </div>
                 </div>
                 <div class="chart-wrap">
                   <canvas id="productChart"></canvas>
@@ -424,11 +437,50 @@
 
               <div class="card chart-card">
                 <div class="card-header">
-                  <h3>Feedback Categories</h3>
+                  <div>
+                    <h3>Feedback Categories</h3>
+                    <p class="chart-description">Review volume by customer feedback category</p>
+                  </div>
                 </div>
                 <div class="chart-wrap">
                   <canvas id="categoryChart"></canvas>
                 </div>
+              </div>
+              <div class="card chart-card">
+                <div class="card-header">
+                  <div>
+                    <h3>Sentiment by category</h3>
+                    <p class="chart-description">Positive, neutral, and negative review counts</p>
+                  </div>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="categorySentimentChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="analytics-detail-grid">
+              <div class="card analytics-detail-card">
+                <div class="card-header">
+                  <div>
+                    <h3>Category performance</h3>
+                    <p class="chart-description">Rating and negative feedback for each category</p>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Category</th><th>Reviews</th><th>Avg. rating</th><th>Negative</th></tr></thead>
+                    <tbody id="categoryPerformanceBody"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="card analytics-detail-card">
+                <div class="card-header">
+                  <div>
+                    <h3>Complaint themes</h3>
+                    <p class="chart-description">Topics detected in negative feedback</p>
+                  </div>
+                </div>
+                <div id="analyticsComplaintThemes" class="analytics-theme-list"></div>
               </div>
             </div>
           </section>

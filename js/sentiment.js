@@ -60,7 +60,7 @@ function analyzeSentiment(text, rating) {
     product: 'Reproduce the reported product issue and route it to the product team with the review details.',
     usability: 'Walk through the reported setup or navigation friction and prioritize the simplest usability fix.'
   };
-  const recommendation = sentiment === 'Negative'
+  const suggestion = sentiment === 'Negative'
     ? suggestions[topic] || 'Follow up with the customer, clarify the issue, and assign an owner to investigate.'
     : sentiment === 'Positive'
       ? 'Thank the customer and share the specific praise with the responsible product or service team.'
@@ -76,7 +76,7 @@ function analyzeSentiment(text, rating) {
     topics,
     urgent,
     explanation,
-    recommendation
+    suggestion
   };
 }
 

@@ -90,7 +90,10 @@ function getReviews() {
   }
   return reviews.map((review) => {
     const analysis = analyzeSentiment(review.reviewText, review.rating);
-    return { ...review, ...analysis, id: review.id };
+    const storedRecommendation = review.recommendation === analysis.suggestion
+      ? Number(review.rating) >= 4 ? 'Yes' : Number(review.rating) <= 2 ? 'No' : 'Maybe'
+      : review.recommendation;
+    return { ...review, ...analysis, recommendation: storedRecommendation, id: review.id };
   });
 }
 

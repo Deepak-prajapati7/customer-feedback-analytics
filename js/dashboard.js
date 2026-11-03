@@ -77,6 +77,7 @@ function renderDashboard() {
   renderRatingChart(filtered);
   renderProductChart(filtered);
   renderCategoryChart(filtered);
+  renderAnalyticsDetails(filtered);
   renderRecentReviews(filtered);
   renderInsights(filtered);
   renderSatisfactionGauge(satisfaction);
@@ -84,6 +85,176 @@ function renderDashboard() {
   renderKeywordInsights(filtered);
   renderAdvancedInsights();
   renderNotificationCenter();
+}
+
+function renderAnalyticsDetails(reviews) {
+  const kpiGrid = document.getElementById('analyticsKpiGrid');
+  if (!kpiGrid) return;
+
+  const total = reviews.length;
+  const recommendationCount = reviews.filter((review) => ['Yes', 'No', 'Maybe'].includes(review.recommendation))
+    .filter((review) => review.recommendation === 'Yes').length;
+  const recommendationResponses = reviews.filter((review) => ['Yes', 'No', 'Maybe'].includes(review.recommendation)).length;
+  const negativeCount = reviews.filter((review) => review.sentiment === 'Negative').length;
+  const lowRatingCount = reviews.filter((review) => Number(review.rating) <= 2).length;
+  const recommendations = recommendationResponses ? Math.round((recommendationCount / recommendationResponses) * 100) : 0;
+  const cards = [
+    { label: 'Reviews analyzed', value: total, note: 'In the selected filters', icon: 'fa-comments', tone: 'primary' },
+    { label: 'Average rating', value: `${calculateAverageRating(reviews).toFixed(1)} / 5`, note: `${reviews.filter((review) => Number(review.rating) > 0).length} rated reviews`, icon: 'fa-star', tone: 'amber' },
+    { label: 'Would recommend', value: recommendationResponses ? `${recommendations}%` : '—', note: `${recommendationCount} of ${recommendationResponses} responses`, icon: 'fa-thumbs-up', tone: 'green' },
+    { label: 'Needs attention', value: lowRatingCount, note: `${negativeCount} negative sentiment`, icon: 'fa-triangle-exclamation', tone: 'rose' }
+  ];
+  kpiGrid.innerHTML = cards.map((card) => `
+    <article class="analytics-kpi-card tone-${card.tone}">
+      <span class="analytics-kpi-icon"><i class="fa-solid ${card.icon}"></i></span>
+      <div><span class="analytics-kpi-label">${card.label}</span><strong>${card.value}</strong><small>${card.note}</small></div>
+    </article>
+  `).join('');
+
+  const months = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date();
+    date.setDate(1);
+    date.setMonth(date.getMonth() - (5 - index));
+    return {
+      date,
+      label: date.toLocaleDateString('en-US', { month: 'short' }),
+      count: reviews.filter((review) => {
+        const createdAt = new Date(review.createdAt);
+        return createdAt.getMonth() === date.getMonth() && createdAt.getFullYear() === date.getFullYear();
+      }).length
+    };
+  });
+  renderAnalyticsTrendChart(months);
+
+  const categoryMap = new Map();
+  reviews.forEach((review) => {
+    const category = review.category || 'Uncategorized';
+    const row = categoryMap.get(category) || { total: 0, ratingTotal: 0, ratings: 0, negative: 0 };
+    row.total += 1;
+    if (Number(review.rating) > 0) {
+      row.ratingTotal += Number(review.rating);
+      row.ratings += 1;
+    }
+    if (review.sentiment === 'Negative') row.negative += 1;
+    categoryMap.set(category, row);
+  });
+  const categoryRows = [...categoryMap.entries()].sort((a, b) => b[1].total - a[1].total);
+  const table = document.getElementById('categoryPerformanceBody');
+  if (table) {
+    table.innerHTML = categoryRows.length
+      ? categoryRows.map(([name, row]) => `
+        <tr>
+          <td><strong>${escapeHtml(name)}</strong></td>
+          <td>${row.total}</td>
+          <td>${row.ratings ? `${(row.ratingTotal / row.ratings).toFixed(1)} / 5` : '—'}</td>
+          <td><span class="analytics-negative-count">${row.negative} <small>(${row.total ? Math.round(row.negative / row.total * 100) : 0}%)</small></span></td>
+        </tr>
+      `).join('')
+      : '<tr><td colspan="4"><div class="empty-state">No category data for these filters.</div></td></tr>';
+  }
+  renderCategorySentimentChart(reviews);
+
+  const topicTotals = {};
+  reviews.filter((review) => review.sentiment === 'Negative').forEach((review) => {
+    analyzeSentiment(review.reviewText, review.rating).topics.forEach((topic) => {
+      topicTotals[topic] = (topicTotals[topic] || 0) + 1;
+    });
+  });
+  const themes = Object.entries(topicTotals).sort((a, b) => b[1] - a[1]);
+  const themeList = document.getElementById('analyticsComplaintThemes');
+  if (themeList) {
+    themeList.innerHTML = themes.length
+      ? themes.map(([topic, count]) => `
+        <div class="analytics-theme-row">
+          <span><i class="fa-solid fa-hashtag"></i> ${escapeHtml(topic)}</span>
+          <strong>${count} <small>${count === 1 ? 'mention' : 'mentions'}</small></strong>
+        </div>
+      `).join('')
+      : '<div class="empty-state">No complaint themes were detected in negative feedback for these filters.</div>';
+  }
+}
+
+function renderAnalyticsTrendChart(months) {
+  const canvas = document.getElementById('analyticsTrendChart');
+  if (!canvas) return;
+  const isDark = document.body.classList.contains('theme-dark');
+  if (typeof Chart !== 'undefined') {
+    window.chartInstances = window.chartInstances || {};
+    window.chartInstances.analyticsTrend?.destroy();
+    window.chartInstances.analyticsTrend = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: months.map((month) => month.label),
+        datasets: [{
+          label: 'Reviews',
+          data: months.map((month) => month.count),
+          backgroundColor: isDark ? 'rgba(129, 140, 248, 0.8)' : 'rgba(79, 70, 229, 0.82)',
+          borderRadius: 7,
+          maxBarThickness: 42
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, border: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0, color: isDark ? '#94a3b8' : '#64748b' }, grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)' }, border: { display: false } }
+        }
+      }
+    });
+    return;
+  }
+  const maximum = Math.max(1, ...months.map((month) => month.count));
+  canvas.parentElement.innerHTML = `<div class="analytics-fallback-chart">${months.map((month) => `
+    <div class="analytics-fallback-bar"><strong>${month.count}</strong><span style="height:${Math.max(3, month.count / maximum * 100)}%"></span><small>${escapeHtml(month.label)}</small></div>
+  `).join('')}</div>`;
+}
+
+function renderCategorySentimentChart(reviews) {
+  const canvas = document.getElementById('categorySentimentChart');
+  if (!canvas) return;
+  const selectedCategories = new Set(reviews.map((review) => review.category || 'Uncategorized'));
+  const rows = [...selectedCategories].map((category) => {
+    const categoryReviews = reviews.filter((review) => (review.category || 'Uncategorized') === category);
+    return {
+      category,
+      positive: categoryReviews.filter((review) => review.sentiment === 'Positive').length,
+      neutral: categoryReviews.filter((review) => review.sentiment === 'Neutral').length,
+      negative: categoryReviews.filter((review) => review.sentiment === 'Negative').length
+    };
+  });
+  const isDark = document.body.classList.contains('theme-dark');
+  if (typeof Chart !== 'undefined') {
+    window.chartInstances = window.chartInstances || {};
+    window.chartInstances.categorySentiment?.destroy();
+    window.chartInstances.categorySentiment = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: rows.map((row) => row.category),
+        datasets: [
+          { label: 'Positive', data: rows.map((row) => row.positive), backgroundColor: '#10b981', borderRadius: 3 },
+          { label: 'Neutral', data: rows.map((row) => row.neutral), backgroundColor: '#94a3b8', borderRadius: 3 },
+          { label: 'Negative', data: rows.map((row) => row.negative), backgroundColor: '#f43f5e', borderRadius: 3 }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true, beginAtZero: true, ticks: { precision: 0, color: isDark ? '#94a3b8' : '#64748b' }, grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)' }, border: { display: false } },
+          y: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { display: false }, border: { display: false } }
+        },
+        plugins: { legend: { position: 'bottom', labels: { color: isDark ? '#cbd5e1' : '#475569', usePointStyle: true, padding: 14 } } }
+      }
+    });
+    return;
+  }
+  canvas.parentElement.innerHTML = rows.length ? rows.map((row) => {
+    const total = row.positive + row.neutral + row.negative || 1;
+    return `<div class="analytics-sentiment-row"><span>${escapeHtml(row.category)}</span><div><i style="width:${row.positive / total * 100}%;background:#10b981"></i><i style="width:${row.neutral / total * 100}%;background:#94a3b8"></i><i style="width:${row.negative / total * 100}%;background:#f43f5e"></i></div><small>${total}</small></div>`;
+  }).join('') : '<div class="empty-state">No category data for these filters.</div>';
 }
 
 function renderTrendChart(reviews) {

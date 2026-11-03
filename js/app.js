@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (target === 'analytics-view') {
           window.requestAnimationFrame(() => {
-            ['rating', 'product', 'category'].forEach((name) => window.chartInstances?.[name]?.resize());
+            ['rating', 'product', 'category', 'analyticsTrend', 'categorySentiment'].forEach((name) => window.chartInstances?.[name]?.resize());
           });
         }
         if (target === 'reports-view') renderReportSummary();

@@ -30,6 +30,203 @@ body.theme-dark .welcome-card {
     linear-gradient(135deg, #171330 0%, #111827 100%);
 }
 
+.analytics-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.analytics-kpi-card {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.analytics-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.analytics-kpi-icon {
+  display: grid;
+  flex: 0 0 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border-radius: 0.8rem;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.analytics-kpi-card.tone-amber .analytics-kpi-icon {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.analytics-kpi-card.tone-green .analytics-kpi-icon {
+  background: var(--secondary-soft);
+  color: var(--secondary);
+}
+
+.analytics-kpi-card.tone-rose .analytics-kpi-icon {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.analytics-kpi-card > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.18rem;
+}
+
+.analytics-kpi-label,
+.analytics-kpi-card small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.analytics-kpi-card strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  letter-spacing: -0.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-trend-card {
+  margin-bottom: 1rem;
+}
+
+.analytics-charts .chart-card:last-child {
+  grid-column: 1 / -1;
+}
+
+.analytics-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.8fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.analytics-detail-card {
+  min-width: 0;
+  padding: 1.2rem;
+}
+
+.analytics-detail-card .table-wrap {
+  overflow-x: auto;
+}
+
+.analytics-negative-count {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.analytics-negative-count small,
+.analytics-theme-row small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.analytics-theme-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.analytics-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--card-soft);
+}
+
+.analytics-theme-row > span {
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.analytics-theme-row > span i {
+  color: var(--primary);
+}
+
+.analytics-theme-row strong {
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.analytics-fallback-chart {
+  display: flex;
+  height: 100%;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 0.8rem;
+  padding: 1rem 0.5rem 0;
+}
+
+.analytics-fallback-bar {
+  display: flex;
+  height: 100%;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.analytics-fallback-bar span {
+  width: min(60%, 2.8rem);
+  min-height: 3px;
+  border-radius: 0.45rem 0.45rem 0 0;
+  background: var(--primary-gradient);
+}
+
+.analytics-fallback-bar strong {
+  color: var(--text);
+}
+
+.analytics-sentiment-row {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) 2fr 2rem;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.65rem 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.analytics-sentiment-row > div {
+  display: flex;
+  height: 0.7rem;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
+}
+
+.analytics-sentiment-row > div i {
+  display: block;
+}
+
+.analytics-sentiment-row small {
+  color: var(--muted);
+  text-align: right;
+}
+
 .review-analysis-card {
   margin: 1rem 0;
   padding: 1rem 1.15rem;
@@ -348,8 +545,26 @@ body.theme-dark .welcome-card {
 }
 
 @media (max-width: 700px) {
+  .analytics-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analytics-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-charts .chart-card:last-child {
+    grid-column: auto;
+  }
+
   .complaint-summary {
     grid-template-columns: 1fr;
+  }
+
+  @media (max-width: 420px) {
+    .analytics-kpi-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .copilot-form {

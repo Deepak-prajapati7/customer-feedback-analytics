@@ -401,13 +401,18 @@ body.theme-dark .sidebar {
 }
 
 .searchbox i {
+  position: static;
+  flex: 0 0 auto;
+  transform: none;
   color: var(--muted-light);
   font-size: 0.85rem;
 }
 
 .searchbox input {
+  min-width: 0;
   flex: 1;
   border: 0;
+  padding-left: 0;
   padding: 0.2rem 0;
   background: transparent;
   color: var(--text);

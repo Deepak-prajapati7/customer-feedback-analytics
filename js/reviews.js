@@ -284,7 +284,7 @@ function openReviewModal(review) {
         <div class="review-topic-list">${analysis.topics.length
           ? analysis.topics.map((topic) => `<span class="chip">${escapeHtml(topic)}</span>`).join('')
           : '<span class="data-disclaimer">No topic matched confidently.</span>'}</div>
-        <p class="analysis-recommendation"><strong>Suggested next step:</strong> ${escapeHtml(analysis.recommendation)}</p>
+        <p class="analysis-recommendation"><strong>Suggested next step:</strong> ${escapeHtml(analysis.suggestion)}</p>
         <small class="data-disclaimer">Rule-based analysis runs locally; it is not a hosted AI model.</small>
       </div>
 
