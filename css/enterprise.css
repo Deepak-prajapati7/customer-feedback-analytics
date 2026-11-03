@@ -387,6 +387,7 @@ body.theme-dark .sidebar {
   align-items: center;
   gap: 0.5rem;
   min-width: 250px;
+  height: 36px;
   padding: 0.4rem 0.65rem;
   background: var(--card);
   border: 1px solid var(--line);
@@ -410,6 +411,7 @@ body.theme-dark .sidebar {
 
 .searchbox input {
   min-width: 0;
+  min-height: 0;
   flex: 1;
   border: 0;
   padding-left: 0;
