@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" width="240" height="60" fill="none">
+  <defs>
+    <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#7c3aed" />
+    </linearGradient>
+  </defs>
+  <!-- Icon -->
+  <rect x="4" y="8" width="44" height="44" rx="12" fill="url(#logoGrad)" />
+  <path d="M37 20H15c-1.1 0-2 .9-2 2v18l4-4h20c1.1 0 2-.9 2-2V22c0-1.1-.9-2-2-2zm-10 12h-2v-2h2v2zm0-4h-2v-4h2v4z" fill="#ffffff" />
+  <!-- Wordmark -->
+  <text x="58" y="33" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="800" fill="#0f172a" letter-spacing="-0.5">Feedback</text>
+  <!-- PRO Badge -->
+  <rect x="156" y="18" width="38" height="18" rx="5" fill="url(#logoGrad)" />
+  <text x="163" y="31" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="800" fill="#ffffff" letter-spacing="0.5">PRO</text>
+  <!-- Subtitle -->
+  <text x="59" y="47" font-family="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="8.5" font-weight="700" fill="#64748b" letter-spacing="1.2">COLLECT • ANALYZE • IMPROVE</text>
+</svg>
