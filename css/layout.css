@@ -70,6 +70,10 @@ body.theme-dark .sidebar {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.04));
 }
 
+body.theme-dark .brand-logo {
+  content: url("../assets/images/FeedbackPro%20Analytics%20Logo%20Dark.png");
+}
+
 .sidebar .sidebar-close-btn {
   display: none;
   width: 32px;
