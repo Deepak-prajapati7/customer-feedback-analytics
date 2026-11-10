@@ -32,10 +32,15 @@ function renderReviewsTable(reviews) {
   if (countNegativeEl) countNegativeEl.textContent = negativeCount;
   if (countFiveStarEl) countFiveStarEl.textContent = fiveStarCount;
 
-  const productOptions = [...new Set(reviews.map((r) => r.product))];
-  if (productFilter && !productFilter.dataset.ready) {
-    productFilter.innerHTML = '<option value="all">All products</option>' + productOptions.map((product) => `<option value="${product}">${product}</option>`).join('');
-    productFilter.dataset.ready = 'true';
+  const productOptions = [...new Set(reviews.map((r) => r.product).filter(Boolean))];
+  if (productFilter) {
+    const selectedProduct = productFilter.value || 'all';
+    const nextKey = productOptions.join('|');
+    if (productFilter.dataset.optionsKey !== nextKey) {
+      productFilter.innerHTML = '<option value="all">All products</option>' + productOptions.map((product) => `<option value="${escapeHtml(product)}">${escapeHtml(product)}</option>`).join('');
+      productFilter.value = productOptions.includes(selectedProduct) ? selectedProduct : 'all';
+      productFilter.dataset.optionsKey = nextKey;
+    }
   }
 
   let filtered = [...reviews];
@@ -102,7 +107,6 @@ function renderReviewsTable(reviews) {
     const initial = (review.customerName || 'A').charAt(0).toUpperCase();
     const colorIndex = (review.customerName || 'A').charCodeAt(0) % 6;
     const isResponded = review.responseStatus === 'responded';
-    const analysis = analyzeSentiment(review.reviewText, review.rating);
     return `
       <tr>
         <td>
@@ -214,6 +218,7 @@ function openReviewModal(review) {
   const initial = (review.customerName || 'A').charAt(0).toUpperCase();
   const colorIndex = (review.customerName || 'A').charCodeAt(0) % 6;
   const isResponded = review.responseStatus === 'responded';
+  const analysis = analyzeSentiment(review.reviewText, review.rating);
   const analysis = typeof analyzeSentiment === 'function'
     ? analyzeSentiment(review.reviewText || '', review.rating || 3)
     : { explanation: 'Sentiment analyzed based on feedback tone.', urgent: false, topics: [], suggestion: 'Acknowledge customer feedback.' };

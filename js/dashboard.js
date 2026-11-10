@@ -868,5 +868,35 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNotificationBadge();
     initializeReviewFilters();
     renderReviewsTable(getReviews());
+
+    window.addEventListener('storage', (event) => {
+      if (
+        event.key !== STORAGE_KEYS.reviews &&
+        event.key !== STORAGE_KEYS.notifications &&
+        event.key !== null
+      ) {
+        return;
+      }
+
+      const reviews = getReviews();
+      renderDashboard();
+      renderNotificationList();
+      updateNotificationBadge();
+      renderReviewsTable(reviews);
+      if (typeof renderReportSummary === 'function') renderReportSummary();
+      if (typeof renderComplaints === 'function') renderComplaints();
+
+      if (event.key === STORAGE_KEYS.reviews && event.newValue) {
+        try {
+          const prevCount = event.oldValue ? JSON.parse(event.oldValue).length : 0;
+          const nextCount = JSON.parse(event.newValue).length;
+          if (nextCount > prevCount) {
+            showToast('New customer feedback received!', 'success');
+          }
+        } catch (error) {
+          // Ignore malformed storage comparison
+        }
+      }
+    });
   }
 });

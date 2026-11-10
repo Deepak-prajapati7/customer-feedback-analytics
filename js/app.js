@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const authState = ensureAuth();
-  if (page !== 'login' && page !== 'feedback' && !authState.isLoggedIn) {
+  if (page !== 'login' && page !== 'feedback' && page !== 'customer-portal' && !authState.isLoggedIn) {
     window.location.href = 'login.html';
   }
 
