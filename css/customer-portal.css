@@ -34,8 +34,11 @@
 }
 
 .cp-brand .brand-logo {
-  width: 172px;
-  max-height: 48px;
+  width: 175px;
+  height: 54px;
+  border-radius: 10px;
+  object-fit: cover;
+  object-position: center 42%;
 }
 
 .cp-portal-pill {
@@ -654,5 +657,10 @@
 
   .cp-submit-btn {
     width: 100%;
+  }
+
+  .cp-nav-tab {
+    padding: 0.45rem 0.72rem;
+    font-size: 0.78rem;
   }
 }
