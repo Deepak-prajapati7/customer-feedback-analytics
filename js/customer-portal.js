@@ -1,9 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
   if (document.body.dataset.page !== 'customer-portal') return;
 
+  const CUSTOMER_AUTH_KEY = 'feedbackpro_customer_auth';
+  const CUSTOMER_ACCOUNTS_KEY = 'feedbackpro_customer_accounts';
   const CUSTOMER_SUBMISSIONS_KEY = 'feedbackpro_customer_submissions';
-  const CUSTOMER_EMAIL_KEY = 'feedbackpro_customer_email';
   const CUSTOMER_THEME_KEY = 'feedbackpro_customer_theme';
+  const DEMO_CUSTOMER = {
+    name: 'Demo Customer',
+    email: 'customer@feedbackpro.io',
+    password: 'customer123'
+  };
 
   const ratingLabels = {
     1: '1 / 5 — Poor experience',
@@ -13,11 +19,32 @@ document.addEventListener('DOMContentLoaded', () => {
     5: '5 / 5 — Outstanding experience!'
   };
 
+  const authSection = document.getElementById('cpAuthSection');
+  const portalSection = document.getElementById('cpPortalSection');
+  const navTabsWrap = document.getElementById('cpNavTabs');
+  const userPill = document.getElementById('cpUserPill');
+  const userAvatar = document.getElementById('cpUserAvatar');
+  const userNameEl = document.getElementById('cpUserName');
+  const userEmailEl = document.getElementById('cpUserEmail');
+  const logoutBtn = document.getElementById('cpLogoutBtn');
+
+  const authTabButtons = document.querySelectorAll('[data-cp-auth-tab]');
+  const loginForm = document.getElementById('cpLoginForm');
+  const signupForm = document.getElementById('cpSignupForm');
+  const authError = document.getElementById('cpAuthError');
+  const demoLoginBtn = document.getElementById('cpDemoLoginBtn');
+  const loginEmailInput = document.getElementById('cpLoginEmail');
+  const loginPasswordInput = document.getElementById('cpLoginPassword');
+  const signupNameInput = document.getElementById('cpSignupName');
+  const signupEmailInput = document.getElementById('cpSignupEmail');
+  const signupPasswordInput = document.getElementById('cpSignupPassword');
+
   const tabButtons = document.querySelectorAll('[data-cp-tab]');
   const sendView = document.getElementById('cpSendView');
   const historyView = document.getElementById('cpHistoryView');
   const submissionCountBadge = document.getElementById('cpSubmissionCount');
   const themeToggleBtn = document.getElementById('cpThemeToggle');
+  const heroTitle = document.getElementById('cpHeroTitle');
 
   const formCard = document.getElementById('cpFormCard');
   const successCard = document.getElementById('cpSuccessCard');
@@ -56,32 +83,39 @@ document.addEventListener('DOMContentLoaded', () => {
     return `cp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   }
 
-  function getSavedSubmissionIds() {
-    const ids = getStoredValue(CUSTOMER_SUBMISSIONS_KEY, []);
-    return Array.isArray(ids) ? ids : [];
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
   }
 
-  function saveSubmissionId(id) {
-    const ids = getSavedSubmissionIds();
-    if (!ids.includes(id)) {
-      ids.unshift(id);
-      setStoredValue(CUSTOMER_SUBMISSIONS_KEY, ids);
-    }
+  function getCustomerAuth() {
+    const auth = getStoredValue(CUSTOMER_AUTH_KEY, { isLoggedIn: false });
+    return auth && typeof auth === 'object' ? auth : { isLoggedIn: false };
   }
 
-  function getSavedCustomerEmail() {
-    try {
-      return localStorage.getItem(CUSTOMER_EMAIL_KEY) || '';
-    } catch (error) {
-      return '';
-    }
+  function setCustomerAuth(auth) {
+    setStoredValue(CUSTOMER_AUTH_KEY, auth);
   }
 
-  function setSavedCustomerEmail(email) {
-    try {
-      localStorage.setItem(CUSTOMER_EMAIL_KEY, email);
-    } catch (error) {
-      // Ignore storage quota errors for convenience preference
+  function getCustomerAccounts() {
+    const accounts = getStoredValue(CUSTOMER_ACCOUNTS_KEY, []);
+    return Array.isArray(accounts) ? accounts : [];
+  }
+
+  function saveCustomerAccounts(accounts) {
+    setStoredValue(CUSTOMER_ACCOUNTS_KEY, accounts);
+  }
+
+  function getSavedSubmissionRecords() {
+    const records = getStoredValue(CUSTOMER_SUBMISSIONS_KEY, []);
+    return Array.isArray(records) ? records : [];
+  }
+
+  function saveSubmissionRecord(reviewId, ownerEmail) {
+    const records = getSavedSubmissionRecords();
+    const exists = records.some((item) => (typeof item === 'string' ? item === reviewId : item.id === reviewId));
+    if (!exists) {
+      records.unshift({ id: reviewId, email: String(ownerEmail || '').trim().toLowerCase() });
+      setStoredValue(CUSTOMER_SUBMISSIONS_KEY, records);
     }
   }
 
@@ -116,15 +150,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function getMyCustomerReviews() {
-    const allReviews = getReviews();
-    const submittedIds = new Set(getSavedSubmissionIds());
-    const savedEmail = getSavedCustomerEmail().trim().toLowerCase();
+  function showAuthError(message) {
+    if (!authError) return;
+    if (!message) {
+      authError.hidden = true;
+      authError.textContent = '';
+      return;
+    }
+    authError.textContent = message;
+    authError.hidden = false;
+  }
 
-    return allReviews.filter((review) => {
+  function switchAuthTab(mode) {
+    const nextMode = mode === 'signup' ? 'signup' : 'login';
+    authTabButtons.forEach((button) => {
+      const isActive = button.dataset.cpAuthTab === nextMode;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-selected', String(isActive));
+    });
+    loginForm?.classList.toggle('active', nextMode === 'login');
+    signupForm?.classList.toggle('active', nextMode === 'signup');
+    showAuthError('');
+  }
+
+  function getMyCustomerReviews() {
+    const auth = getCustomerAuth();
+    if (!auth.isLoggedIn) return [];
+
+    const accountEmail = String(auth.email || '').trim().toLowerCase();
+    const submittedIds = new Set(
+      getSavedSubmissionRecords()
+        .filter((item) => {
+          if (typeof item === 'string') return accountEmail === DEMO_CUSTOMER.email;
+          return item && item.email === accountEmail;
+        })
+        .map((item) => (typeof item === 'string' ? item : item.id))
+    );
+
+    return getReviews().filter((review) => {
       if (submittedIds.has(review.id)) return true;
-      if (savedEmail && String(review.email || '').trim().toLowerCase() === savedEmail) return true;
-      return false;
+      return Boolean(accountEmail) && String(review.email || '').trim().toLowerCase() === accountEmail;
     });
   }
 
@@ -213,11 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function resetFormForAnotherSubmission() {
-    const lastName = customerNameInput?.value.trim() || '';
-    const lastEmail = emailInput?.value.trim() || getSavedCustomerEmail();
+    const auth = getCustomerAuth();
     form?.reset();
-    if (customerNameInput && lastName) customerNameInput.value = lastName;
-    if (emailInput && lastEmail) emailInput.value = lastEmail;
+    if (customerNameInput) customerNameInput.value = auth.name || '';
+    if (emailInput) emailInput.value = auth.email || '';
     setRating(0);
     showFormError('');
     if (titleCounter) titleCounter.textContent = '0';
@@ -234,8 +298,57 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formCard) formCard.hidden = false;
   }
 
+  function syncPortalView() {
+    const auth = getCustomerAuth();
+    const loggedIn = Boolean(auth.isLoggedIn && auth.email);
+
+    if (authSection) authSection.hidden = loggedIn;
+    if (portalSection) portalSection.hidden = !loggedIn;
+    if (navTabsWrap) navTabsWrap.hidden = !loggedIn;
+    if (userPill) userPill.hidden = !loggedIn;
+    if (logoutBtn) logoutBtn.hidden = !loggedIn;
+
+    if (!loggedIn) {
+      activeEmailFilter = '';
+      showAuthError('');
+      return;
+    }
+
+    const displayName = auth.name || 'Customer';
+    const displayEmail = auth.email || '';
+    const initials = displayName
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+
+    if (userAvatar) userAvatar.textContent = initials || 'C';
+    if (userNameEl) userNameEl.textContent = displayName;
+    if (userEmailEl) userEmailEl.textContent = displayEmail;
+    if (heroTitle) heroTitle.textContent = `Welcome, ${displayName}! Share your experience`;
+
+    activeEmailFilter = '';
+    if (lookupEmailInput) lookupEmailInput.value = displayEmail;
+
+    resetFormForAnotherSubmission();
+    updateSubmissionBadge();
+    switchTab('send');
+  }
+
+  function completeCustomerLogin(customer) {
+    setCustomerAuth({
+      isLoggedIn: true,
+      name: customer.name,
+      email: customer.email
+    });
+    syncPortalView();
+  }
+
   function renderHistory() {
     if (!historyList) return;
+    const auth = getCustomerAuth();
     const allReviews = getReviews();
     let matchingReviews;
 
@@ -260,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <p>${
             activeEmailFilter
               ? `We couldn't find any feedback submitted with ${escapeHtml(activeEmailFilter)}.`
-              : 'When you send feedback here, you can check its status and read replies from our team.'
+              : `No reviews found yet for ${escapeHtml(auth.email || 'your account')}. Send feedback and track replies here.`
           }</p>
           <button type="button" class="primary-btn" id="cpEmptySendBtn">
             <i class="fa-regular fa-paper-plane" aria-hidden="true"></i> Send Feedback
@@ -324,15 +437,117 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initTheme();
+  syncPortalView();
 
-  // Pre-fill customer email if previously used in the portal
-  const previousEmail = getSavedCustomerEmail();
-  if (previousEmail) {
-    if (emailInput && !emailInput.value) emailInput.value = previousEmail;
-    if (lookupEmailInput && !lookupEmailInput.value) lookupEmailInput.value = previousEmail;
-  }
+  authTabButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      switchAuthTab(button.dataset.cpAuthTab);
+    });
+  });
 
-  updateSubmissionBadge();
+  [['cpToggleLoginPassword', 'cpLoginPassword'], ['cpToggleSignupPassword', 'cpSignupPassword']].forEach(([buttonId, inputId]) => {
+    const button = document.getElementById(buttonId);
+    const input = document.getElementById(inputId);
+    if (!button || !input) return;
+    button.addEventListener('click', () => {
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      const icon = button.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('fa-eye', !isPassword);
+        icon.classList.toggle('fa-eye-slash', isPassword);
+      }
+    });
+  });
+
+  demoLoginBtn?.addEventListener('click', () => {
+    if (loginEmailInput) loginEmailInput.value = DEMO_CUSTOMER.email;
+    if (loginPasswordInput) loginPasswordInput.value = DEMO_CUSTOMER.password;
+    completeCustomerLogin({ name: DEMO_CUSTOMER.name, email: DEMO_CUSTOMER.email });
+    showToast('Signed in as Demo Customer.', 'success');
+  });
+
+  loginForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    showAuthError('');
+
+    const email = (loginEmailInput?.value || '').trim().toLowerCase();
+    const password = (loginPasswordInput?.value || '').trim();
+
+    if (!isValidEmail(email) || !password) {
+      showAuthError('Please enter your email address and password.');
+      return;
+    }
+
+    if (email === DEMO_CUSTOMER.email && password === DEMO_CUSTOMER.password) {
+      completeCustomerLogin({ name: DEMO_CUSTOMER.name, email: DEMO_CUSTOMER.email });
+      showToast('Welcome back!', 'success');
+      return;
+    }
+
+    const account = getCustomerAccounts().find(
+      (item) => String(item.email || '').trim().toLowerCase() === email && item.password === password
+    );
+    if (!account) {
+      showAuthError('Invalid customer credentials. Use customer@feedbackpro.io / customer123 or create a new account.');
+      return;
+    }
+
+    completeCustomerLogin({ name: account.name, email: account.email });
+    showToast(`Welcome back, ${account.name}!`, 'success');
+  });
+
+  signupForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    showAuthError('');
+
+    const name = (signupNameInput?.value || '').trim();
+    const email = (signupEmailInput?.value || '').trim().toLowerCase();
+    const password = signupPasswordInput?.value || '';
+
+    if (!name) {
+      showAuthError('Please enter your full name.');
+      signupNameInput?.focus();
+      return;
+    }
+    if (!isValidEmail(email)) {
+      showAuthError('Please enter a valid email address.');
+      signupEmailInput?.focus();
+      return;
+    }
+    if (password.length < 6) {
+      showAuthError('Choose a password with at least 6 characters.');
+      signupPasswordInput?.focus();
+      return;
+    }
+
+    const accounts = getCustomerAccounts();
+    const duplicate =
+      email === DEMO_CUSTOMER.email ||
+      accounts.some((item) => String(item.email || '').trim().toLowerCase() === email);
+    if (duplicate) {
+      showAuthError('An account with this email already exists. Please sign in instead.');
+      return;
+    }
+
+    const newAccount = {
+      id: createId(),
+      name,
+      email,
+      password,
+      createdAt: new Date().toISOString()
+    };
+    saveCustomerAccounts([newAccount, ...accounts]);
+    signupForm.reset();
+    completeCustomerLogin({ name: newAccount.name, email: newAccount.email });
+    showToast(`Welcome, ${name}! Your customer account is ready.`, 'success');
+  });
+
+  logoutBtn?.addEventListener('click', () => {
+    setCustomerAuth({ isLoggedIn: false });
+    syncPortalView();
+    showToast('Signed out of Customer Portal.', 'success');
+  });
 
   tabButtons.forEach((button) => {
     button.addEventListener('click', () => {
@@ -397,6 +612,13 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     showFormError('');
 
+    const auth = getCustomerAuth();
+    if (!auth.isLoggedIn) {
+      syncPortalView();
+      showAuthError('Please sign in first to send feedback.');
+      return;
+    }
+
     const customerName = customerNameInput.value.trim();
     const email = emailInput.value.trim();
     const product = productSelect.value;
@@ -411,7 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
       customerNameInput.focus();
       return;
     }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email || !isValidEmail(email)) {
       showFormError('Please enter a valid email address.');
       emailInput.focus();
       return;
@@ -488,9 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       saveNotifications(notifications);
 
-      saveSubmissionId(newReview.id);
-      setSavedCustomerEmail(email);
-      if (lookupEmailInput) lookupEmailInput.value = email;
+      saveSubmissionRecord(newReview.id, auth.email);
 
       if (submitBtn) submitBtn.disabled = false;
       btnText?.classList.remove('hidden');
@@ -525,7 +745,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   resetLookupBtn?.addEventListener('click', () => {
     activeEmailFilter = '';
-    if (lookupEmailInput) lookupEmailInput.value = getSavedCustomerEmail();
+    const auth = getCustomerAuth();
+    if (lookupEmailInput) lookupEmailInput.value = auth.email || '';
     renderHistory();
   });
 
@@ -539,4 +760,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-
