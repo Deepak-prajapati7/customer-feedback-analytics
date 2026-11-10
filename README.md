@@ -4,12 +4,12 @@ FeedbackPro AI is a static HTML/CSS/vanilla JavaScript dashboard. It runs withou
 
 ## Demo authentication
 
-Use the demo accounts below:
+Use the demo admin account below:
 
-- **Admin Portal**: `admin@feedbackpro.io` / `admin123` (demo-only client-side auth)
-- **Customer Portal**: `customer@feedbackpro.io` / `customer123` (or create a new customer account, persisted by `server.py` in SQLite `data/feedbackpro.db`)
+- Email: admin@feedbackpro.io
+- Password: admin123
 
-Do not use real credentials or sensitive customer information.
+This is demo-only client-side authentication, not secure production authentication. Sign-up creates a browser session only; passwords and user accounts are not sent to or persisted by a server. Do not use real credentials or sensitive customer information.
 
 ## Features
 
@@ -26,15 +26,13 @@ Sentiment and Copilot are deterministic local fallbacks, not a hosted LLM. They 
 
 ## Run locally
 
-From the project directory, start the Python backend server:
+From the project directory, start the static web server:
 
 ```bash
-python3 server.py
+python3 -m http.server 8000
 ```
 
-Then open:
-- **Admin Portal**: `http://127.0.0.1:8000/login.html`
-- **Customer Login Portal**: `http://127.0.0.1:8000/customer-portal.html`
+Then open `http://localhost:8000/login.html`.
 
 ## Import format
 

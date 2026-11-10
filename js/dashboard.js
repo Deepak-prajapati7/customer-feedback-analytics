@@ -746,7 +746,6 @@ function renderNotificationCenter() {
     button.addEventListener('click', () => {
       const notifications = getNotifications().map((item) => item.id === button.dataset.id ? { ...item, unread: false } : item);
       saveNotifications(notifications);
-      if (typeof syncMarkNotificationsRead === 'function') syncMarkNotificationsRead(button.dataset.id);
       renderNotificationCenter();
       updateNotificationBadge();
     });
@@ -784,7 +783,6 @@ function renderNotificationList() {
     button.addEventListener('click', () => {
       const notifications = getNotifications().map((item) => item.id === button.dataset.id ? { ...item, unread: false } : item);
       saveNotifications(notifications);
-      if (typeof syncMarkNotificationsRead === 'function') syncMarkNotificationsRead(button.dataset.id);
       renderNotificationList();
       renderNotificationCenter();
       updateNotificationBadge();
@@ -855,28 +853,11 @@ function setupDashboardInteractions() {
   document.getElementById('markAllReadBtn')?.addEventListener('click', () => {
     const notifications = getNotifications().map((item) => ({ ...item, unread: false }));
     saveNotifications(notifications);
-    if (typeof syncMarkNotificationsRead === 'function') syncMarkNotificationsRead(null);
     renderNotificationList();
     renderNotificationCenter();
     updateNotificationBadge();
     showToast('All notifications marked as read', 'success');
   });
-}
-
-function refreshDashboardFromStore(notifyNew = false) {
-  const reviews = getReviews();
-  renderDashboard();
-  renderNotificationList();
-  updateNotificationBadge();
-  renderReviewsTable(reviews);
-  if (typeof renderReportSummary === 'function') renderReportSummary();
-  const activeComplaintInput = document.activeElement?.closest('#complaintsTableBody');
-  if (!activeComplaintInput && typeof renderComplaints === 'function') {
-    renderComplaints();
-  }
-  if (notifyNew) {
-    showToast('New customer feedback received!', 'success');
-  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -888,20 +869,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeReviewFilters();
     renderReviewsTable(getReviews());
 
-    window.addEventListener('feedbackpro:synced', (event) => {
-      refreshDashboardFromStore(Boolean(event.detail?.hasNewReviews));
-    });
-
-    if (typeof syncFromServer === 'function') {
-      syncFromServer(false);
-      setInterval(() => {
-        if (typeof pollServerSync === 'function') pollServerSync();
-      }, 2500);
-      window.addEventListener('focus', () => {
-        if (typeof pollServerSync === 'function') pollServerSync();
-      });
-    }
-
     window.addEventListener('storage', (event) => {
       if (
         event.key !== STORAGE_KEYS.reviews &&
@@ -911,17 +878,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      let hasNew = false;
+      const reviews = getReviews();
+      renderDashboard();
+      renderNotificationList();
+      updateNotificationBadge();
+      renderReviewsTable(reviews);
+      if (typeof renderReportSummary === 'function') renderReportSummary();
+      if (typeof renderComplaints === 'function') renderComplaints();
+
       if (event.key === STORAGE_KEYS.reviews && event.newValue) {
         try {
           const prevCount = event.oldValue ? JSON.parse(event.oldValue).length : 0;
           const nextCount = JSON.parse(event.newValue).length;
-          hasNew = nextCount > prevCount;
+          if (nextCount > prevCount) {
+            showToast('New customer feedback received!', 'success');
+          }
         } catch (error) {
           // Ignore malformed storage comparison
         }
       }
-      refreshDashboardFromStore(hasNew);
     });
   }
 });

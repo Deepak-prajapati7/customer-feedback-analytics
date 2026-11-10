@@ -181,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('resetDemoDataBtn')?.addEventListener('click', () => {
     if (window.confirm('Reset workspace to initial sample customer feedback?')) {
       resetToSampleData();
-      if (typeof syncResetSampleData === 'function') syncResetSampleData();
       localStorage.removeItem('feedbackpro_complaints');
       renderDashboard();
       renderReviewsTable(getReviews());
@@ -192,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('clearAllDataBtn')?.addEventListener('click', () => {
     if (window.confirm('Clear all review records? You can restore sample data anytime.')) {
       if (!saveReviews([])) return;
-      if (typeof syncClearReviews === 'function') syncClearReviews();
       localStorage.removeItem('feedbackpro_complaints');
       showToast('All review records cleared', 'success');
       renderDashboard();

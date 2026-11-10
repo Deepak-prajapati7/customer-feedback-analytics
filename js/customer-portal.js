@@ -1,9 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
   if (document.body.dataset.page !== 'customer-portal') return;
 
+  const CUSTOMER_AUTH_KEY = 'feedbackpro_customer_auth';
+  const CUSTOMER_ACCOUNTS_KEY = 'feedbackpro_customer_accounts';
+  const CUSTOMER_SUBMISSIONS_KEY = 'feedbackpro_customer_submissions';
   const CUSTOMER_THEME_KEY = 'feedbackpro_customer_theme';
-  const DEMO_EMAIL = 'customer@feedbackpro.io';
-  const DEMO_PASSWORD = 'customer123';
+  const DEMO_CUSTOMER = {
+    name: 'Demo Customer',
+    email: 'customer@feedbackpro.io',
+    password: 'customer123'
+  };
 
   const ratingLabels = {
     1: '😞 1 / 5 — Poor experience',
@@ -13,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     5: '🤩 5 / 5 — Outstanding experience!'
   };
 
-  const serverAlert = document.getElementById('cpServerAlert');
   const authSection = document.getElementById('cpAuthSection');
   const portalSection = document.getElementById('cpPortalSection');
   const navTabsWrap = document.getElementById('cpNavTabs');
@@ -81,38 +86,50 @@ document.addEventListener('DOMContentLoaded', () => {
   const historySearchInput = document.getElementById('cpHistorySearch');
   const historyList = document.getElementById('cpHistoryList');
 
-  let currentCustomer = null;
-  let customerReviews = [];
   let activeTab = 'send';
   let activeHistoryFilter = 'all';
-  let pollTimer = null;
+
+  function createId() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return `cp_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  }
 
   function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').trim());
   }
 
-  async function portalApi(url, options = {}) {
-    const response = await fetch(url, {
-      credentials: 'same-origin',
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers || {})
-      },
-      ...options
-    });
-    let payload = null;
-    try {
-      payload = await response.json();
-    } catch (error) {
-      payload = null;
+  function getCustomerAuth() {
+    const auth = getStoredValue(CUSTOMER_AUTH_KEY, { isLoggedIn: false });
+    return auth && typeof auth === 'object' ? auth : { isLoggedIn: false };
+  }
+
+  function setCustomerAuth(auth) {
+    setStoredValue(CUSTOMER_AUTH_KEY, auth);
+  }
+
+  function getCustomerAccounts() {
+    const accounts = getStoredValue(CUSTOMER_ACCOUNTS_KEY, []);
+    return Array.isArray(accounts) ? accounts : [];
+  }
+
+  function saveCustomerAccounts(accounts) {
+    setStoredValue(CUSTOMER_ACCOUNTS_KEY, accounts);
+  }
+
+  function getSavedSubmissionRecords() {
+    const records = getStoredValue(CUSTOMER_SUBMISSIONS_KEY, []);
+    return Array.isArray(records) ? records : [];
+  }
+
+  function saveSubmissionRecord(reviewId, ownerEmail) {
+    const records = getSavedSubmissionRecords();
+    const exists = records.some((item) => (typeof item === 'string' ? item === reviewId : item.id === reviewId));
+    if (!exists) {
+      records.unshift({ id: reviewId, email: String(ownerEmail || '').trim().toLowerCase() });
+      setStoredValue(CUSTOMER_SUBMISSIONS_KEY, records);
     }
-    if (!response.ok) {
-      const err = new Error(payload?.error || `Request failed (${response.status})`);
-      err.status = response.status;
-      throw err;
-    }
-    return payload;
   }
 
   function applyCustomerTheme(theme) {
@@ -180,9 +197,30 @@ document.addEventListener('DOMContentLoaded', () => {
     showAuthError('');
   }
 
+  function getMyCustomerReviews() {
+    const auth = getCustomerAuth();
+    if (!auth.isLoggedIn) return [];
+
+    const accountEmail = String(auth.email || '').trim().toLowerCase();
+    const submittedIds = new Set(
+      getSavedSubmissionRecords()
+        .filter((item) => {
+          if (typeof item === 'string') return accountEmail === DEMO_CUSTOMER.email;
+          return item && item.email === accountEmail;
+        })
+        .map((item) => (typeof item === 'string' ? item : item.id))
+    );
+
+    return getReviews().filter((review) => {
+      if (submittedIds.has(review.id)) return true;
+      return Boolean(accountEmail) && String(review.email || '').trim().toLowerCase() === accountEmail;
+    });
+  }
+
   function updateStatsAndBadge() {
-    const total = customerReviews.length;
-    const replied = customerReviews.filter((item) => item.responseStatus === 'responded').length;
+    const reviews = getMyCustomerReviews();
+    const total = reviews.length;
+    const replied = reviews.filter((item) => item.responseStatus === 'responded').length;
     const pending = total - replied;
 
     if (statTotalEl) statTotalEl.textContent = String(total);
@@ -196,12 +234,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateLivePreview() {
+    const auth = getCustomerAuth();
     const product = productSelect?.value || 'Product';
     const category = categorySelect?.value || 'Category';
     const rating = Math.max(0, Math.min(5, Number(ratingInput?.value || 0)));
     const title = reviewTitleInput?.value.trim() || 'Your feedback title will appear here';
     const text = reviewTextInput?.value.trim() || 'Start typing your experience and see how your submission will appear to our team.';
-    const author = customerNameInput?.value.trim() || currentCustomer?.name || 'Customer';
+    const author = customerNameInput?.value.trim() || auth.name || 'Customer';
     const recommendation = document.querySelector('input[name="cpRecommendation"]:checked')?.value || 'Yes';
 
     if (previewProduct) previewProduct.innerHTML = `<i class="fa-solid fa-cube" aria-hidden="true"></i> ${escapeHtml(product)}`;
@@ -246,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderConfirmation(review) {
     if (!formCard || !successCard || !successSummary || !successSubtitle) return;
-    successSubtitle.textContent = `Thanks, ${review.customerName}! Your feedback is saved in our system for our team to review.`;
+    successSubtitle.textContent = `Thanks, ${review.customerName}! Your feedback has been sent to our team.`;
     successSummary.innerHTML = `
       <div class="cp-summary-top">
         <div class="cp-summary-meta">
@@ -270,9 +309,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function resetFormForAnotherSubmission() {
+    const auth = getCustomerAuth();
     form?.reset();
-    if (customerNameInput) customerNameInput.value = currentCustomer?.name || '';
-    if (emailInput) emailInput.value = currentCustomer?.email || '';
+    if (customerNameInput) customerNameInput.value = auth.name || '';
+    if (emailInput) emailInput.value = auth.email || '';
     setRating(0);
     showFormError('');
     if (titleCounter) titleCounter.textContent = '0';
@@ -293,9 +333,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderHistory() {
     if (!historyList) return;
+    const auth = getCustomerAuth();
+    const myReviews = getMyCustomerReviews();
     const query = (historySearchInput?.value || '').trim().toLowerCase();
 
-    let filtered = [...customerReviews];
+    let filtered = [...myReviews];
     if (activeHistoryFilter === 'responded') {
       filtered = filtered.filter((item) => item.responseStatus === 'responded');
     } else if (activeHistoryFilter === 'pending') {
@@ -317,11 +359,11 @@ document.addEventListener('DOMContentLoaded', () => {
       historyList.innerHTML = `
         <div class="card cp-empty-card">
           <div class="cp-empty-icon"><i class="fa-regular fa-comment-dots" aria-hidden="true"></i></div>
-          <h3>${customerReviews.length ? 'No matching feedback' : 'No feedback submitted yet'}</h3>
+          <h3>${myReviews.length ? 'No matching feedback' : 'No feedback submitted yet'}</h3>
           <p>${
-            customerReviews.length
+            myReviews.length
               ? 'Try clearing your filter or search term to view all of your feedback.'
-              : `No reviews found yet for ${escapeHtml(currentCustomer?.email || 'your account')}. Write your first feedback and track replies here.`
+              : `No reviews found yet for ${escapeHtml(auth.email || 'your account')}. Write your first feedback and track replies here.`
           }</p>
           <button type="button" class="primary-btn" id="cpEmptySendBtn">
             <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Write Feedback
@@ -384,42 +426,6 @@ document.addEventListener('DOMContentLoaded', () => {
       .join('');
   }
 
-  async function refreshCustomerFeedback(silent = true) {
-    if (!currentCustomer) return;
-    try {
-      const data = await portalApi('/api/customer/feedback', { method: 'GET' });
-      customerReviews = Array.isArray(data.reviews) ? data.reviews : [];
-      updateStatsAndBadge();
-      if (activeTab === 'history') {
-        renderHistory();
-      }
-    } catch (error) {
-      if (error.status === 401) {
-        currentCustomer = null;
-        customerReviews = [];
-        syncAuthUI();
-        return;
-      }
-      if (!silent) {
-        showToast(error.message || 'Could not load your feedback.', 'error');
-      }
-    }
-  }
-
-  function startPolling() {
-    stopPolling();
-    pollTimer = setInterval(() => {
-      if (currentCustomer) refreshCustomerFeedback(true);
-    }, 3000);
-  }
-
-  function stopPolling() {
-    if (pollTimer) {
-      clearInterval(pollTimer);
-      pollTimer = null;
-    }
-  }
-
   function switchTab(tabName) {
     activeTab = tabName === 'history' ? 'history' : 'send';
     tabButtons.forEach((button) => {
@@ -428,13 +434,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sendView) sendView.hidden = activeTab !== 'send';
     if (historyView) historyView.hidden = activeTab !== 'history';
     if (activeTab === 'history') {
-      refreshCustomerFeedback(true);
       renderHistory();
     }
   }
 
-  function syncAuthUI() {
-    const loggedIn = Boolean(currentCustomer && currentCustomer.email);
+  function syncPortalView() {
+    const auth = getCustomerAuth();
+    const loggedIn = Boolean(auth.isLoggedIn && auth.email);
 
     if (authSection) authSection.hidden = loggedIn;
     if (portalSection) portalSection.hidden = !loggedIn;
@@ -443,15 +449,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (logoutBtn) logoutBtn.hidden = !loggedIn;
 
     if (!loggedIn) {
-      stopPolling();
-      customerReviews = [];
       updateStatsAndBadge();
       showAuthError('');
       return;
     }
 
-    const displayName = currentCustomer.name || 'Customer';
-    const displayEmail = currentCustomer.email || '';
+    const displayName = auth.name || 'Customer';
+    const displayEmail = auth.email || '';
     const initials = displayName
       .split(/\s+/)
       .filter(Boolean)
@@ -466,31 +470,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (heroTitle) heroTitle.textContent = `Welcome, ${displayName}! Share your experience`;
 
     resetFormForAnotherSubmission();
+    updateStatsAndBadge();
     switchTab('send');
-    refreshCustomerFeedback(true);
-    startPolling();
   }
 
-  async function initSession() {
-    initTheme();
-    try {
-      const health = await portalApi('/api/health', { method: 'GET' });
-      if (!health?.ok) throw new Error('Backend unavailable');
-      if (serverAlert) serverAlert.hidden = true;
-    } catch (error) {
-      if (serverAlert) serverAlert.hidden = false;
-      return;
-    }
-
-    try {
-      const me = await portalApi('/api/customer/me', { method: 'GET' });
-      currentCustomer = me?.authenticated ? me.customer : null;
-      syncAuthUI();
-    } catch (error) {
-      currentCustomer = null;
-      syncAuthUI();
-    }
+  function completeCustomerLogin(customer) {
+    setCustomerAuth({
+      isLoggedIn: true,
+      name: customer.name,
+      email: customer.email
+    });
+    syncPortalView();
   }
+
+  initTheme();
+  syncPortalView();
 
   authTabButtons.forEach((button) => {
     button.addEventListener('click', () => {
@@ -513,45 +507,44 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  async function submitLogin(email, password) {
-    showAuthError('');
-    try {
-      const data = await portalApi('/api/customer/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password })
-      });
-      if (serverAlert) serverAlert.hidden = true;
-      currentCustomer = data.customer;
-      syncAuthUI();
-      showToast(`Signed in as ${currentCustomer.name}.`, 'success');
-    } catch (error) {
-      if (error.status === 404 || error.status === 405 || error.status === 501) {
-        if (serverAlert) serverAlert.hidden = false;
-        showAuthError('Python backend server is not running. Start it with: python3 server.py');
-        return;
-      }
-      showAuthError(error.message || 'Sign in failed.');
-    }
-  }
-
   demoLoginBtn?.addEventListener('click', () => {
-    if (loginEmailInput) loginEmailInput.value = DEMO_EMAIL;
-    if (loginPasswordInput) loginPasswordInput.value = DEMO_PASSWORD;
-    submitLogin(DEMO_EMAIL, DEMO_PASSWORD);
+    if (loginEmailInput) loginEmailInput.value = DEMO_CUSTOMER.email;
+    if (loginPasswordInput) loginPasswordInput.value = DEMO_CUSTOMER.password;
+    completeCustomerLogin({ name: DEMO_CUSTOMER.name, email: DEMO_CUSTOMER.email });
+    showToast('Signed in as Demo Customer.', 'success');
   });
 
   loginForm?.addEventListener('submit', (event) => {
     event.preventDefault();
+    showAuthError('');
+
     const email = (loginEmailInput?.value || '').trim().toLowerCase();
     const password = (loginPasswordInput?.value || '').trim();
+
     if (!isValidEmail(email) || !password) {
       showAuthError('Please enter your email address and password.');
       return;
     }
-    submitLogin(email, password);
+
+    if (email === DEMO_CUSTOMER.email && password === DEMO_CUSTOMER.password) {
+      completeCustomerLogin({ name: DEMO_CUSTOMER.name, email: DEMO_CUSTOMER.email });
+      showToast('Signed in as Demo Customer.', 'success');
+      return;
+    }
+
+    const account = getCustomerAccounts().find(
+      (item) => String(item.email || '').trim().toLowerCase() === email && item.password === password
+    );
+    if (!account) {
+      showAuthError('Invalid customer credentials. Use customer@feedbackpro.io / customer123 or create a new account.');
+      return;
+    }
+
+    completeCustomerLogin({ name: account.name, email: account.email });
+    showToast(`Signed in as ${account.name}.`, 'success');
   });
 
-  signupForm?.addEventListener('submit', async (event) => {
+  signupForm?.addEventListener('submit', (event) => {
     event.preventDefault();
     showAuthError('');
 
@@ -575,34 +568,31 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    try {
-      const data = await portalApi('/api/customer/register', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password })
-      });
-      if (serverAlert) serverAlert.hidden = true;
-      signupForm.reset();
-      currentCustomer = data.customer;
-      syncAuthUI();
-      showToast(`Welcome, ${name}! Your account is ready.`, 'success');
-    } catch (error) {
-      if (error.status === 404 || error.status === 405 || error.status === 501) {
-        if (serverAlert) serverAlert.hidden = false;
-        showAuthError('Python backend server is not running. Start it with: python3 server.py');
-        return;
-      }
-      showAuthError(error.message || 'Could not create customer account.');
+    const accounts = getCustomerAccounts();
+    const duplicate =
+      email === DEMO_CUSTOMER.email ||
+      accounts.some((item) => String(item.email || '').trim().toLowerCase() === email);
+    if (duplicate) {
+      showAuthError('An account with this email already exists. Please sign in instead.');
+      return;
     }
+
+    const newAccount = {
+      id: createId(),
+      name,
+      email,
+      password,
+      createdAt: new Date().toISOString()
+    };
+    saveCustomerAccounts([newAccount, ...accounts]);
+    signupForm.reset();
+    completeCustomerLogin({ name: newAccount.name, email: newAccount.email });
+    showToast(`Welcome, ${name}! Your account is ready.`, 'success');
   });
 
-  logoutBtn?.addEventListener('click', async () => {
-    try {
-      await portalApi('/api/customer/logout', { method: 'POST', body: '{}' });
-    } catch (error) {
-      // Clear local UI state regardless
-    }
-    currentCustomer = null;
-    syncAuthUI();
+  logoutBtn?.addEventListener('click', () => {
+    setCustomerAuth({ isLoggedIn: false });
+    syncPortalView();
     showToast('Signed out of Customer Portal.', 'success');
   });
 
@@ -671,12 +661,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (reviewBar) reviewBar.style.width = `${Math.min(100, (len / 500) * 100)}%`;
   });
 
-  form?.addEventListener('submit', async (event) => {
+  form?.addEventListener('submit', (event) => {
     event.preventDefault();
     showFormError('');
 
-    if (!currentCustomer) {
-      syncAuthUI();
+    const auth = getCustomerAuth();
+    if (!auth.isLoggedIn) {
+      syncPortalView();
       showAuthError('Please sign in first to send feedback.');
       return;
     }
@@ -732,39 +723,56 @@ document.addEventListener('DOMContentLoaded', () => {
     btnText?.classList.add('hidden');
     btnLoader?.classList.remove('hidden');
 
-    try {
-      const data = await portalApi('/api/customer/feedback', {
-        method: 'POST',
-        body: JSON.stringify({
-          customerName,
-          email,
-          product,
-          category,
-          rating,
-          reviewTitle,
-          reviewText,
-          recommendation
-        })
-      });
+    setTimeout(() => {
+      const analysis = analyzeSentiment(reviewText, rating);
+      const newReview = {
+        id: createId(),
+        customerName,
+        email,
+        product,
+        category,
+        rating,
+        reviewTitle,
+        reviewText,
+        recommendation,
+        sentiment: analysis.sentiment,
+        sentimentScore: analysis.score,
+        createdAt: new Date().toISOString(),
+        responseStatus: 'pending',
+        reply: '',
+        replyDate: ''
+      };
 
-      const createdReview = data.review;
-      customerReviews = [createdReview, ...customerReviews.filter((item) => item.id !== createdReview.id)];
-      updateStatsAndBadge();
-      renderConfirmation(createdReview);
-      showToast('Thank you! Your feedback has been sent.', 'success');
-    } catch (error) {
-      if (error.status === 401) {
-        currentCustomer = null;
-        syncAuthUI();
-        showAuthError('Your customer session expired. Please sign in again.');
+      const reviews = getReviews();
+      reviews.unshift(newReview);
+      if (!saveReviews(reviews)) {
+        if (submitBtn) submitBtn.disabled = false;
+        btnText?.classList.remove('hidden');
+        btnLoader?.classList.add('hidden');
+        showFormError('Unable to save your feedback right now. Please try again.');
         return;
       }
-      showFormError(error.message || 'Unable to send your feedback right now. Please try again.');
-    } finally {
+
+      const notifications = getNotifications();
+      notifications.unshift({
+        id: createId(),
+        title: 'New customer review',
+        message: `${customerName} added a ${analysis.sentiment.toLowerCase()} review for ${product}.`,
+        unread: true,
+        createdAt: new Date().toISOString()
+      });
+      saveNotifications(notifications);
+
+      saveSubmissionRecord(newReview.id, auth.email);
+
       if (submitBtn) submitBtn.disabled = false;
       btnText?.classList.remove('hidden');
       btnLoader?.classList.add('hidden');
-    }
+
+      updateStatsAndBadge();
+      renderConfirmation(newReview);
+      showToast('Thank you! Your feedback has been sent.', 'success');
+    }, 300);
   });
 
   sendAnotherBtn?.addEventListener('click', () => {
@@ -788,9 +796,13 @@ document.addEventListener('DOMContentLoaded', () => {
     renderHistory();
   });
 
-  window.addEventListener('focus', () => {
-    if (currentCustomer) refreshCustomerFeedback(true);
+  // Live updates when admin replies or updates status in another tab
+  window.addEventListener('storage', (event) => {
+    if (event.key === STORAGE_KEYS.reviews || event.key === null) {
+      updateStatsAndBadge();
+      if (activeTab === 'history') {
+        renderHistory();
+      }
+    }
   });
-
-  initSession();
 });

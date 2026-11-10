@@ -202,7 +202,6 @@ function renderReviewsTable(reviews) {
         const reviews = getReviews();
         const updated = reviews.filter((item) => item.id !== id);
         if (!saveReviews(updated)) return;
-        if (typeof syncDeleteReview === 'function') syncDeleteReview(id);
         showToast('Review removed from workspace.', 'success');
         renderReviewsTable(updated);
         if (typeof renderDashboard === 'function') renderDashboard();
@@ -390,9 +389,6 @@ function openReviewModal(review) {
         createdAt: new Date().toISOString()
       });
       saveNotifications(notifications);
-      if (typeof syncReplyReview === 'function') {
-        syncReplyReview(review.id, text, review.customerName || '');
-      }
 
       showToast(`Reply sent to ${review.customerName || 'customer'}!`, 'success');
       renderReviewsTable(reviews);
@@ -409,9 +405,6 @@ function openReviewModal(review) {
       const nextStatus = reviews[index].responseStatus === 'responded' ? 'pending' : 'responded';
       reviews[index].responseStatus = nextStatus;
       if (!saveReviews(reviews)) return;
-      if (typeof syncToggleReviewStatus === 'function') {
-        syncToggleReviewStatus(review.id, nextStatus);
-      }
       showToast(`Review status updated to ${nextStatus}.`, 'success');
       renderReviewsTable(reviews);
       if (typeof renderDashboard === 'function') renderDashboard();

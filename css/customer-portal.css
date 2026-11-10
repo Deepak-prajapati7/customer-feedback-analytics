@@ -15,10 +15,7 @@
 }
 
 .cp-topbar-wrap {
-  position: sticky;
-  top: 0;
-  z-index: 35;
-  background: color-mix(in srgb, var(--card) 86%, transparent);
+  background: color-mix(in srgb, var(--card) 92%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line);
