@@ -59,6 +59,105 @@
   display: flex;
   align-items: center;
   gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.cp-user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.25rem 0.7rem 0.25rem 0.3rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-xs);
+}
+
+.cp-user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--primary-gradient);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.cp-user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.cp-user-meta strong {
+  font-size: 0.76rem;
+  color: var(--text);
+}
+
+.cp-user-meta small {
+  font-size: 0.66rem;
+  color: var(--muted);
+}
+
+.cp-logout-btn {
+  padding: 0.45rem 0.85rem;
+  min-height: 36px;
+}
+
+/* Customer Login / Sign Up Gate */
+.cp-auth-section {
+  display: grid;
+  place-items: center;
+  padding: 0.75rem 0 1.5rem;
+}
+
+.cp-auth-card {
+  width: min(460px, 100%);
+  padding: 2rem;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+}
+
+.cp-auth-intro {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.cp-auth-intro .eyebrow {
+  margin: 0 0 0.25rem;
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cp-auth-intro h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+.cp-auth-intro p:last-child {
+  margin: 0.4rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.cp-auth-card .input-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.cp-auth-card .cp-demo-login-btn {
+  margin-top: 0;
 }
 
 .cp-nav-tabs {
@@ -650,10 +749,19 @@
     justify-content: space-between;
   }
 
+  .cp-user-pill {
+    max-width: 100%;
+  }
+
+  .cp-user-meta small {
+    display: none;
+  }
+
   .cp-hero,
   .cp-form-card,
   .cp-success-card,
-  .cp-lookup-card {
+  .cp-lookup-card,
+  .cp-auth-card {
     padding: 1.25rem;
   }
 
