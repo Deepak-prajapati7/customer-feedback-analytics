@@ -180,7 +180,18 @@
 }
 
 .cp-view {
-  animation: pageFadeIn var(--transition-normal) both;
+  animation: cpViewEnter 140ms ease-out both;
+}
+
+@keyframes cpViewEnter {
+  from {
+    opacity: 0.92;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .cp-view[hidden] {
