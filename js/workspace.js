@@ -15,6 +15,7 @@ function getComplaints() {
 function saveComplaints(complaints) {
   try {
     localStorage.setItem(COMPLAINTS_KEY, JSON.stringify(complaints));
+    if (typeof syncSaveComplaints === 'function') syncSaveComplaints(complaints);
     return true;
   } catch (error) {
     console.error('Unable to save complaint records.', error);
@@ -270,6 +271,7 @@ function confirmFeedbackImport() {
   const reviews = getReviews();
   const cleanRows = readyRows.map(({ rowNumber, importError, duplicate, ...review }) => review);
   if (!saveReviews([...cleanRows, ...reviews])) return;
+  if (typeof syncImportReviews === 'function') syncImportReviews(cleanRows);
   pendingImportRows = [];
   document.getElementById('feedbackFileInput').value = '';
   document.getElementById('importPreviewWrap').hidden = true;
