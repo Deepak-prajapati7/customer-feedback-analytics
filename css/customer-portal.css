@@ -241,8 +241,90 @@
   font-weight: 650;
 }
 
+.cp-form-card .rating-panel {
+  padding: 1.15rem 1.25rem;
+  margin: 0.25rem 0 1.15rem;
+  background: var(--card-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.cp-form-card .rating-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.65rem;
+}
+
+.cp-form-card .rating-panel-header label {
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.cp-form-card .rating-feedback-text {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.cp-form-card .rating-feedback-text.selected {
+  color: #f59e0b;
+}
+
+.cp-form-card .counter {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
 .cp-form-card .recom-option {
+  position: relative;
   margin-bottom: 0;
+}
+
+.cp-form-card .recom-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cp-form-card .recom-option.active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.cp-form-card .recom-option.active .recom-card-content {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.cp-form-card .compact-header {
+  margin-bottom: 1.25rem;
+}
+
+.cp-form-card .compact-header .eyebrow {
+  margin: 0 0 0.25rem;
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cp-form-card .compact-header h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.cp-form-card .compact-header .section-description {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
 }
 
 .cp-form-actions {
