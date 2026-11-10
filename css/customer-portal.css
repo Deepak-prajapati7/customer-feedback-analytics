@@ -1022,7 +1022,31 @@
 }
 
 .cp-history-filters .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--card-soft);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cp-history-filters .chip:hover {
+  border-color: var(--primary-border);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.cp-history-filters .chip.active {
+  background: var(--primary-gradient);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
 }
 
 .cp-history-search-wrap {
@@ -1204,6 +1228,10 @@
 }
 
 @media (max-width: 680px) {
+  .cp-topbar-wrap {
+    position: static;
+  }
+
   .cp-header,
   .cp-shell {
     padding-left: 0.9rem;
