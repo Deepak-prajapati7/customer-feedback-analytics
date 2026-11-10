@@ -214,6 +214,9 @@ function openReviewModal(review) {
   const initial = (review.customerName || 'A').charAt(0).toUpperCase();
   const colorIndex = (review.customerName || 'A').charCodeAt(0) % 6;
   const isResponded = review.responseStatus === 'responded';
+  const analysis = typeof analyzeSentiment === 'function'
+    ? analyzeSentiment(review.reviewText || '', review.rating || 3)
+    : { explanation: 'Sentiment analyzed based on feedback tone.', urgent: false, topics: [], suggestion: 'Acknowledge customer feedback.' };
 
   content.innerHTML = `
     <div class="review-modal-wrap">

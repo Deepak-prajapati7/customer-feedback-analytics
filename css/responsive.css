@@ -1,17 +1,204 @@
+/**
+ * FeedbackPro Design System
+ * Module: Unified Responsive Media Queries
+ * File: css/responsive.css
+ * -------------------------------------------------------------------------
+ * Responsive breakpoints consolidating desktop, tablet, and mobile adaptations.
+ */
+
+/* ==========================================================================
+   Large Tablets & Compact Desktops (max-width: 1200px)
+   ========================================================================== */
+@media (max-width: 1200px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .analytics-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-bottom-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sentiment-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================================================
+   Tablets & Mobile Drawer Mode (max-width: 900px)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: 14px 0 32px rgba(15, 23, 42, 0.25);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar .sidebar-close-btn {
+    display: grid;
+  }
+
+  .main-panel {
+    margin-left: 0;
+  }
+
+  .mobile-menu-btn {
+    display: grid;
+  }
+
+  .topbar {
+    padding: 0.75rem 1.25rem;
+  }
+
+  .page-container {
+    padding: 1.25rem 1.25rem 2.5rem;
+  }
+
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================================================
+   Phablets & Landscape Mobile (max-width: 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .welcome-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.1rem;
+    padding: 1.25rem;
+  }
+
+  .date-filter-wrap {
+    width: 100%;
+  }
+
+  .analytics-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .complaint-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .report-summary,
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recommendation-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-body-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-score-card {
+    grid-template-columns: 1fr;
+  }
+
+  .searchbox {
+    min-width: 160px;
+  }
+
+  .search-kbd {
+    display: none;
+  }
+
+  .profile-meta {
+    display: none;
+  }
+
+  .copilot-form {
+    align-items: stretch;
+  }
+
+  .copilot-form .primary-btn {
+    padding-inline: 0.8rem;
+  }
+
+  .import-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+/* ==========================================================================
+   Mobile Phones (max-width: 520px)
+   ========================================================================== */
 @media (max-width: 520px) {
-  .auth-card {
-    padding: 1.2rem;
+  .kpi-grid,
+  .analytics-kpi-grid,
+  .complaint-summary,
+  .filter-grid {
+    grid-template-columns: 1fr;
   }
 
-  .feedback-page-shell {
-    padding: 0.9rem;
-  }
-
-  .brand-wrap {
-    margin-bottom: 1rem;
+  .searchbox {
+    display: none;
   }
 
   .topbar-left h1 {
-    font-size: 1.3rem;
+    font-size: 1.05rem;
+  }
+
+  .feedback-page-shell {
+    padding: 1rem 0.8rem;
+  }
+
+  .feedback-card {
+    padding: 1.4rem 1.1rem;
+  }
+
+  .auth-card {
+    padding: 1.6rem 1.2rem;
+  }
+
+  .modal-content {
+    padding: 1.25rem 1rem;
+  }
+
+  .composer-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .composer-actions .primary-btn,
+  .composer-actions .secondary-btn {
+    width: 100%;
+  }
+
+  .review-modal-header {
+    flex-direction: column;
+  }
+}
+
+/* ==========================================================================
+   Accessibility: Reduced Motion Preference
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
