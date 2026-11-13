@@ -11,16 +11,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.page-view').forEach((section) => {
           section.classList.toggle('active', section.id === target);
         });
+        if (target === 'dashboard-view' && typeof renderDashboard === 'function') renderDashboard();
+        if (target === 'reviews-view' && typeof renderReviewsTable === 'function') renderReviewsTable(getReviews());
+        if (target === 'sentiment-view' && typeof renderDashboard === 'function') renderDashboard();
         if (target === 'analytics-view') {
+          if (typeof renderDashboard === 'function') renderDashboard();
           window.requestAnimationFrame(() => {
             ['rating', 'product', 'category', 'analyticsTrend', 'categorySentiment'].forEach((name) => window.chartInstances?.[name]?.resize());
           });
         }
+        if (target === 'insights-view' && typeof renderAdvancedInsights === 'function') renderAdvancedInsights();
+        if (target === 'notifications-view' && typeof renderNotificationCenter === 'function') renderNotificationCenter();
         if (target === 'reports-view') renderReportSummary();
         if (target === 'complaints-view') renderComplaints();
         document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item === targetNavButton));
         const titleElement = document.getElementById('pageTitle');
-        const pageTitle = targetNavButton?.textContent.trim() || button.textContent.trim();
+        const pageTitle = targetNavButton?.querySelector('span:not(.nav-count-pill)')?.textContent.trim()
+          || button.querySelector('span:not(.nav-count-pill)')?.textContent.trim()
+          || button.textContent.trim();
         if (titleElement) titleElement.textContent = pageTitle;
         const breadcrumbs = document.querySelector('.breadcrumbs');
         if (breadcrumbs) breadcrumbs.textContent = `Home / ${pageTitle}`;
@@ -135,6 +143,11 @@ document.addEventListener('DOMContentLoaded', () => {
   modal?.addEventListener('click', (event) => {
     if (event.target === modal) modal.classList.remove('open');
   });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal?.classList.contains('open')) {
+      modal.classList.remove('open');
+    }
+  });
 
   const settingsPanel = getSettings();
   const displayNameInput = document.getElementById('displayNameInput');
@@ -200,8 +213,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const authState = ensureAuth();
-  if (page !== 'login' && page !== 'feedback' && !authState.isLoggedIn) {
+  if (page !== 'login' && page !== 'feedback' && page !== 'customer' && !authState.isLoggedIn) {
     window.location.href = 'login.html';
+  } else if (page === 'dashboard' && authState.isLoggedIn && authState.role === 'customer') {
+    window.location.href = 'customer.html';
   }
 
   if (page === 'dashboard' && document.getElementById('notificationList')) {

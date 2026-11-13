@@ -1,6 +1,24 @@
 const PAGE_SIZE = 7;
 let currentQuickFilter = 'all';
 
+const STANDARD_PRODUCTS = [
+  'SmartHub Pro',
+  'InsightFlow',
+  'Nexa CRM',
+  'DeliverLoop',
+  'PulseDesk',
+  'Luna Support'
+];
+
+const STANDARD_CATEGORIES = [
+  'Product Quality',
+  'Customer Service',
+  'Delivery',
+  'Pricing',
+  'Website Experience',
+  'Other'
+];
+
 function renderReviewsTable(reviews) {
   const tbody = document.getElementById('reviewsTableBody');
   const pagination = document.getElementById('reviewPagination');
@@ -32,10 +50,18 @@ function renderReviewsTable(reviews) {
   if (countNegativeEl) countNegativeEl.textContent = negativeCount;
   if (countFiveStarEl) countFiveStarEl.textContent = fiveStarCount;
 
-  const productOptions = [...new Set(reviews.map((r) => r.product))];
-  if (productFilter && !productFilter.dataset.ready) {
-    productFilter.innerHTML = '<option value="all">All products</option>' + productOptions.map((product) => `<option value="${product}">${product}</option>`).join('');
-    productFilter.dataset.ready = 'true';
+  const sidebarPendingBadge = document.getElementById('sidebarPendingReviewsCount');
+  if (sidebarPendingBadge) {
+    sidebarPendingBadge.textContent = pendingCount;
+    sidebarPendingBadge.classList.toggle('hidden', pendingCount === 0);
+  }
+
+  const productOptions = [...new Set(reviews.map((r) => r.product).filter(Boolean))].sort();
+  if (productFilter) {
+    const previousProduct = productFilter.value || 'all';
+    productFilter.innerHTML = '<option value="all">All products</option>' +
+      productOptions.map((product) => `<option value="${escapeHtml(product)}">${escapeHtml(product)}</option>`).join('');
+    productFilter.value = productOptions.includes(previousProduct) ? previousProduct : 'all';
   }
 
   let filtered = [...reviews];
@@ -75,7 +101,7 @@ function renderReviewsTable(reviews) {
   }
 
   if (reviewDateFilter && reviewDateFilter.value) {
-    filtered = filtered.filter((review) => review.createdAt.startsWith(reviewDateFilter.value));
+    filtered = filtered.filter((review) => String(review.createdAt || '').startsWith(reviewDateFilter.value));
   }
 
   const sortOrder = sortFilter?.value || 'newest';
@@ -102,7 +128,10 @@ function renderReviewsTable(reviews) {
     const initial = (review.customerName || 'A').charAt(0).toUpperCase();
     const colorIndex = (review.customerName || 'A').charCodeAt(0) % 6;
     const isResponded = review.responseStatus === 'responded';
-    const analysis = analyzeSentiment(review.reviewText, review.rating);
+    const ratingVal = Math.max(0, Math.min(5, Number(review.rating || 0)));
+    const editedBadge = review.editedAt
+      ? `<span class="edited-pill" title="Edited by ${escapeHtml(review.editedBy || 'Admin')} on ${formatDate(review.editedAt)}"><i class="fa-solid fa-pen"></i> Edited</span>`
+      : '';
     return `
       <tr>
         <td>
@@ -119,13 +148,13 @@ function renderReviewsTable(reviews) {
         </td>
         <td>
           <div class="rating-display">
-            <span class="stars-gold">${'★'.repeat(review.rating || 0)}</span><span class="stars-empty">${'☆'.repeat(5 - (review.rating || 0))}</span>
-            <span class="rating-num">${(review.rating || 0).toFixed(1)}</span>
+            <span class="stars-gold">${'★'.repeat(ratingVal)}</span><span class="stars-empty">${'☆'.repeat(5 - ratingVal)}</span>
+            <span class="rating-num">${ratingVal.toFixed(1)}</span>
           </div>
         </td>
         <td>
           <div class="review-text-cell">
-            <strong class="review-title-snippet">${escapeHtml(review.reviewTitle || '')}</strong>
+            <strong class="review-title-snippet">${escapeHtml(review.reviewTitle || '')} ${editedBadge}</strong>
             <span class="review-body-snippet">${escapeHtml((review.reviewText || '').slice(0, 75))}${review.reviewText?.length > 75 ? '...' : ''}</span>
           </div>
         </td>
@@ -146,10 +175,13 @@ function renderReviewsTable(reviews) {
         </td>
         <td>
           <div class="table-actions">
-            <button class="action-btn-view view-review-btn" data-id="${review.id}" title="View & Reply">
+            <button class="action-btn-view view-review-btn" data-id="${escapeHtml(review.id)}" title="View & Reply">
               <i class="fa-solid fa-reply"></i> Reply
             </button>
-            <button class="action-btn-delete delete-review-btn" data-id="${review.id}" title="Delete review">
+            <button class="action-btn-edit edit-review-btn" data-id="${escapeHtml(review.id)}" title="Edit review">
+              <i class="fa-regular fa-pen-to-square"></i> Edit
+            </button>
+            <button class="action-btn-delete delete-review-btn" data-id="${escapeHtml(review.id)}" title="Delete review">
               <i class="fa-regular fa-trash-can"></i>
             </button>
           </div>
@@ -191,6 +223,13 @@ function renderReviewsTable(reviews) {
     });
   });
 
+  tbody.querySelectorAll('.edit-review-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const review = getReviews().find((item) => item.id === button.dataset.id);
+      if (review) openEditReviewModal(review, { returnToView: false });
+    });
+  });
+
   tbody.querySelectorAll('.delete-review-btn').forEach((button) => {
     button.addEventListener('click', () => {
       const id = button.dataset.id;
@@ -201,6 +240,7 @@ function renderReviewsTable(reviews) {
         showToast('Review removed from workspace.', 'success');
         renderReviewsTable(updated);
         if (typeof renderDashboard === 'function') renderDashboard();
+        if (typeof renderReportSummary === 'function') renderReportSummary();
       }
     });
   });
@@ -209,11 +249,12 @@ function renderReviewsTable(reviews) {
 function openReviewModal(review) {
   const modal = document.getElementById('reviewModal');
   const content = document.getElementById('reviewModalBody');
-  if (!modal || !content) return;
+  if (!modal || !content || !review) return;
 
   const initial = (review.customerName || 'A').charAt(0).toUpperCase();
   const colorIndex = (review.customerName || 'A').charCodeAt(0) % 6;
   const isResponded = review.responseStatus === 'responded';
+  const ratingVal = Math.max(0, Math.min(5, Number(review.rating || 0)));
   const analysis = typeof analyzeSentiment === 'function'
     ? analyzeSentiment(review.reviewText || '', review.rating || 3)
     : { explanation: 'Sentiment analyzed based on feedback tone.', urgent: false, topics: [], suggestion: 'Acknowledge customer feedback.' };
@@ -228,6 +269,7 @@ function openReviewModal(review) {
             <span class="modal-customer-meta">
               <i class="fa-regular fa-envelope"></i> ${escapeHtml(review.email || 'No email provided')} &bull;
               <i class="fa-regular fa-calendar"></i> ${formatDate(review.createdAt)}
+              ${review.editedAt ? `&bull; <span class="edited-pill"><i class="fa-solid fa-pen"></i> Edited ${formatDate(review.editedAt)}</span>` : ''}
             </span>
           </div>
         </div>
@@ -241,8 +283,8 @@ function openReviewModal(review) {
         <div class="score-item">
           <span class="score-label">Customer Rating</span>
           <div class="rating-display-lg">
-            <span class="stars-gold">${'★'.repeat(review.rating || 0)}</span><span class="stars-empty">${'☆'.repeat(5 - (review.rating || 0))}</span>
-            <strong>${(review.rating || 0).toFixed(1)} / 5.0</strong>
+            <span class="stars-gold">${'★'.repeat(ratingVal)}</span><span class="stars-empty">${'☆'.repeat(5 - ratingVal)}</span>
+            <strong>${ratingVal.toFixed(1)} / 5.0</strong>
           </div>
         </div>
         <div class="score-item">
@@ -269,7 +311,12 @@ function openReviewModal(review) {
       </div>
 
       <div class="modal-review-body">
-        <h4 class="modal-review-title">${escapeHtml(review.reviewTitle || 'Customer Feedback')}</h4>
+        <div class="modal-review-title-row">
+          <h4 class="modal-review-title">${escapeHtml(review.reviewTitle || 'Customer Feedback')}</h4>
+          <button type="button" class="secondary-btn modal-edit-trigger" id="openEditFromModalBtn">
+            <i class="fa-regular fa-pen-to-square"></i> Edit Review
+          </button>
+        </div>
         <blockquote class="modal-review-quote">
           <i class="fa-solid fa-quote-left quote-icon"></i>
           <p>${escapeHtml(review.reviewText || '')}</p>
@@ -324,7 +371,7 @@ function openReviewModal(review) {
           <textarea id="replyInput" rows="3" placeholder="Type a professional response to ${escapeHtml(review.customerName || 'the customer')}...">${escapeHtml(review.reply || '')}</textarea>
           <div class="composer-actions">
             <button type="button" class="primary-btn submit-modal-reply-btn" id="saveReplyBtn">
-              <i class="fa-solid fa-paper-plane"></i> Send Reply & Resolve
+              <i class="fa-solid fa-paper-plane"></i> Send Reply &amp; Resolve
             </button>
             <button type="button" class="secondary-btn toggle-status-btn" id="toggleStatusBtn">
               ${isResponded ? '<i class="fa-solid fa-clock-rotate-left"></i> Mark as Pending' : '<i class="fa-solid fa-check"></i> Mark as Resolved'}
@@ -334,6 +381,10 @@ function openReviewModal(review) {
       </div>
     </div>
   `;
+
+  content.querySelector('#openEditFromModalBtn')?.addEventListener('click', () => {
+    openEditReviewModal(review, { returnToView: true });
+  });
 
   // Template button actions
   const replyInput = content.querySelector('#replyInput');
@@ -378,7 +429,7 @@ function openReviewModal(review) {
       // Add audit notification
       const notifications = getNotifications();
       notifications.unshift({
-        id: crypto.randomUUID(),
+        id: generateId(),
         title: 'Response sent to customer',
         message: `Admin replied to review by ${review.customerName || 'customer'}.`,
         unread: false,
@@ -387,8 +438,10 @@ function openReviewModal(review) {
       saveNotifications(notifications);
 
       showToast(`Reply sent to ${review.customerName || 'customer'}!`, 'success');
-      renderReviewsTable(reviews);
+      renderReviewsTable(getReviews());
       if (typeof renderDashboard === 'function') renderDashboard();
+      if (typeof renderNotificationList === 'function') renderNotificationList();
+      if (typeof renderNotificationCenter === 'function') renderNotificationCenter();
       modal.classList.remove('open');
     }
   });
@@ -402,10 +455,286 @@ function openReviewModal(review) {
       reviews[index].responseStatus = nextStatus;
       if (!saveReviews(reviews)) return;
       showToast(`Review status updated to ${nextStatus}.`, 'success');
-      renderReviewsTable(reviews);
+      renderReviewsTable(getReviews());
       if (typeof renderDashboard === 'function') renderDashboard();
       modal.classList.remove('open');
     }
+  });
+
+  modal.classList.add('open');
+}
+
+function openEditReviewModal(review, options = {}) {
+  const modal = document.getElementById('reviewModal');
+  const content = document.getElementById('reviewModalBody');
+  if (!modal || !content || !review) return;
+
+  const currentReviews = getReviews();
+  const productSuggestions = [...new Set([
+    ...STANDARD_PRODUCTS,
+    ...currentReviews.map((item) => item.product).filter(Boolean)
+  ])];
+  const categoryOptions = [...new Set([
+    ...STANDARD_CATEGORIES,
+    review.category
+  ].filter(Boolean))];
+  const currentRating = Math.max(1, Math.min(5, Number(review.rating || 5)));
+
+  content.innerHTML = `
+    <div class="review-modal-wrap">
+      <div class="edit-modal-header">
+        <div>
+          <p class="eyebrow">Admin Editor</p>
+          <h3 class="modal-customer-name">Edit Customer Review</h3>
+          <span class="modal-customer-meta">
+            Submitted ${formatDate(review.createdAt)}
+            ${review.editedAt ? `&bull; Last edited ${formatDate(review.editedAt)} by ${escapeHtml(review.editedBy || 'Admin')}` : ''}
+          </span>
+        </div>
+      </div>
+
+      <form id="editReviewForm" class="edit-review-form">
+        <div class="form-grid">
+          <div class="input-group">
+            <label for="editCustomerName">Customer name</label>
+            <input id="editCustomerName" type="text" value="${escapeHtml(review.customerName || '')}" required />
+          </div>
+          <div class="input-group">
+            <label for="editCustomerEmail">Email address</label>
+            <input id="editCustomerEmail" type="email" value="${escapeHtml(review.email || '')}" placeholder="customer@example.com" />
+          </div>
+          <div class="input-group">
+            <label for="editProduct">Product or service</label>
+            <input id="editProduct" type="text" list="editProductDatalist" value="${escapeHtml(review.product || '')}" required />
+            <datalist id="editProductDatalist">
+              ${productSuggestions.map((product) => `<option value="${escapeHtml(product)}"></option>`).join('')}
+            </datalist>
+          </div>
+          <div class="input-group">
+            <label for="editCategory">Feedback category</label>
+            <select id="editCategory" required>
+              ${categoryOptions.map((cat) => `<option value="${escapeHtml(cat)}" ${cat === review.category ? 'selected' : ''}>${escapeHtml(cat)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="input-group">
+            <label>Overall rating</label>
+            <div class="edit-rating-control">
+              <div class="edit-star-rating" id="editStarRating">
+                ${[1, 2, 3, 4, 5].map((num) => `
+                  <button type="button" class="edit-star-btn ${num <= currentRating ? 'active' : ''}" data-value="${num}" aria-label="${num} star${num > 1 ? 's' : ''}">
+                    <i class="${num <= currentRating ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+                  </button>
+                `).join('')}
+              </div>
+              <span class="edit-rating-badge" id="editRatingBadge">${currentRating} / 5</span>
+              <input type="hidden" id="editRatingValue" value="${currentRating}" />
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="editRecommendation">Would recommend?</label>
+            <select id="editRecommendation">
+              ${['Yes', 'Maybe', 'No'].map((opt) => `<option value="${opt}" ${(review.recommendation || 'Yes') === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="editReviewTitle">Review title</label>
+          <input id="editReviewTitle" type="text" maxlength="100" value="${escapeHtml(review.reviewTitle || '')}" required />
+        </div>
+
+        <div class="input-group">
+          <label for="editReviewText">Detailed review</label>
+          <textarea id="editReviewText" rows="4" maxlength="1000" required>${escapeHtml(review.reviewText || '')}</textarea>
+          <div class="sentiment-live-pill" id="editSentimentLivePill">
+            <span class="pill-dot"></span>
+            <span id="editSentimentLiveText">Calculating sentiment...</span>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="input-group">
+            <label for="editResponseStatus">Response status</label>
+            <select id="editResponseStatus">
+              <option value="pending" ${review.responseStatus !== 'responded' ? 'selected' : ''}>Pending</option>
+              <option value="responded" ${review.responseStatus === 'responded' ? 'selected' : ''}>Responded</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="editReplyText">Admin team response (optional)</label>
+            <textarea id="editReplyText" rows="2" placeholder="Optional response visible to customer">${escapeHtml(review.reply || '')}</textarea>
+          </div>
+        </div>
+
+        <div class="edit-modal-actions">
+          <button type="button" class="secondary-btn" id="cancelEditReviewBtn">Cancel</button>
+          <button type="submit" class="primary-btn"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  const ratingInput = content.querySelector('#editRatingValue');
+  const ratingBadge = content.querySelector('#editRatingBadge');
+  const starButtons = content.querySelectorAll('.edit-star-btn');
+  const titleInput = content.querySelector('#editReviewTitle');
+  const reviewTextInput = content.querySelector('#editReviewText');
+  const livePill = content.querySelector('#editSentimentLivePill');
+  const liveText = content.querySelector('#editSentimentLiveText');
+
+  const updateEditStarVisuals = (val) => {
+    starButtons.forEach((btn) => {
+      const num = Number(btn.dataset.value);
+      const icon = btn.querySelector('i');
+      btn.classList.toggle('active', num <= val);
+      if (icon) {
+        icon.classList.toggle('fa-solid', num <= val);
+        icon.classList.toggle('fa-regular', num > val);
+      }
+    });
+    if (ratingBadge) ratingBadge.textContent = `${val} / 5`;
+  };
+
+  const refreshLiveSentiment = () => {
+    if (!livePill || !liveText || typeof analyzeSentiment !== 'function') return;
+    const text = reviewTextInput.value.trim();
+    const ratingVal = Number(ratingInput.value || 0);
+    if (!text) {
+      livePill.className = 'sentiment-live-pill';
+      liveText.textContent = 'Enter review text to preview sentiment...';
+      return;
+    }
+    const result = analyzeSentiment(text, ratingVal);
+    livePill.className = `sentiment-live-pill tone-${result.sentiment.toLowerCase()}`;
+    liveText.textContent = `Updated sentiment: ${result.sentiment} (${result.score > 0 ? '+' : ''}${result.score})`;
+  };
+
+  starButtons.forEach((btn) => {
+    const val = Number(btn.dataset.value);
+    btn.addEventListener('mouseenter', () => updateEditStarVisuals(val));
+    btn.addEventListener('click', () => {
+      ratingInput.value = String(val);
+      updateEditStarVisuals(val);
+      refreshLiveSentiment();
+    });
+  });
+
+  content.querySelector('#editStarRating')?.addEventListener('mouseleave', () => {
+    updateEditStarVisuals(Number(ratingInput.value || currentRating));
+  });
+
+  reviewTextInput?.addEventListener('input', refreshLiveSentiment);
+  refreshLiveSentiment();
+
+  content.querySelector('#cancelEditReviewBtn')?.addEventListener('click', () => {
+    if (options.returnToView) {
+      const latest = getReviews().find((item) => item.id === review.id) || review;
+      openReviewModal(latest);
+    } else {
+      modal.classList.remove('open');
+    }
+  });
+
+  content.querySelector('#editReviewForm')?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const customerName = content.querySelector('#editCustomerName').value.trim();
+    const email = content.querySelector('#editCustomerEmail').value.trim();
+    const product = content.querySelector('#editProduct').value.trim();
+    const category = content.querySelector('#editCategory').value.trim();
+    const rating = Number(ratingInput.value || 0);
+    const recommendation = content.querySelector('#editRecommendation').value;
+    const reviewTitle = titleInput.value.trim();
+    const reviewText = reviewTextInput.value.trim();
+    const responseStatus = content.querySelector('#editResponseStatus').value;
+    const reply = content.querySelector('#editReplyText').value.trim();
+
+    if (!customerName || !product || !category || rating < 1 || rating > 5 || !reviewTitle || !reviewText) {
+      showToast('Please fill out all required review fields and select a rating.', 'error');
+      return;
+    }
+
+    const reviews = getReviews();
+    const index = reviews.findIndex((item) => item.id === review.id);
+    if (index < 0) {
+      showToast('Review could not be found.', 'error');
+      return;
+    }
+
+    const previousReply = String(reviews[index].reply || '').trim();
+    const sentiment = typeof analyzeSentiment === 'function'
+      ? analyzeSentiment(reviewText, rating)
+      : { sentiment: 'Neutral', score: 0 };
+
+    const auth = ensureAuth();
+    const editorName = getSettings().displayName || auth.name || 'Admin';
+    const nowIso = new Date().toISOString();
+
+    reviews[index] = {
+      ...reviews[index],
+      customerName,
+      email,
+      product,
+      category,
+      rating,
+      recommendation,
+      reviewTitle,
+      reviewText,
+      ...sentiment,
+      sentiment: sentiment.sentiment,
+      sentimentScore: sentiment.score,
+      responseStatus: reply && responseStatus === 'pending' && reply !== previousReply ? 'responded' : responseStatus,
+      reply,
+      replyDate: reply ? (reply !== previousReply || !reviews[index].replyDate ? nowIso : reviews[index].replyDate) : '',
+      editedAt: nowIso,
+      editedBy: editorName
+    };
+
+    if (!saveReviews(reviews)) return;
+
+    // Keep any linked complaint record synchronized
+    if (typeof getComplaints === 'function' && typeof saveComplaints === 'function') {
+      const complaints = getComplaints();
+      let changed = false;
+      complaints.forEach((issue) => {
+        if (issue.reviewId === review.id) {
+          issue.title = reviewTitle;
+          issue.description = reviewText;
+          issue.customerName = customerName;
+          issue.product = product;
+          changed = true;
+        }
+      });
+      if (changed) saveComplaints(complaints);
+    }
+
+    const notifications = getNotifications();
+    notifications.unshift({
+      id: generateId(),
+      title: 'Review edited by admin',
+      message: `${editorName} updated ${customerName}'s review for ${product}.`,
+      unread: false,
+      createdAt: nowIso
+    });
+    saveNotifications(notifications);
+
+    const refreshed = getReviews();
+    renderReviewsTable(refreshed);
+    if (typeof renderDashboard === 'function') renderDashboard();
+    if (typeof renderComplaints === 'function') renderComplaints();
+    if (typeof renderReportSummary === 'function') renderReportSummary();
+    if (typeof renderNotificationList === 'function') renderNotificationList();
+    if (typeof renderNotificationCenter === 'function') renderNotificationCenter();
+
+    showToast('Review updated successfully!', 'success');
+
+    if (options.returnToView) {
+      const updated = refreshed.find((item) => item.id === review.id);
+      if (updated) {
+        openReviewModal(updated);
+        return;
+      }
+    }
+    modal.classList.remove('open');
   });
 
   modal.classList.add('open');
@@ -454,12 +783,17 @@ function initializeReviewFilters() {
 
   if (!searchInput) return;
 
-  searchInput.addEventListener('input', () => renderReviewsTable(getReviews()));
-  ratingFilter?.addEventListener('change', () => renderReviewsTable(getReviews()));
-  sentimentFilter?.addEventListener('change', () => renderReviewsTable(getReviews()));
-  productFilter?.addEventListener('change', () => renderReviewsTable(getReviews()));
-  dateFilter?.addEventListener('change', () => renderReviewsTable(getReviews()));
-  sortFilter?.addEventListener('change', () => renderReviewsTable(getReviews()));
+  const resetAndRender = () => {
+    document.body.dataset.reviewPage = '1';
+    renderReviewsTable(getReviews());
+  };
+
+  searchInput.addEventListener('input', resetAndRender);
+  ratingFilter?.addEventListener('change', resetAndRender);
+  sentimentFilter?.addEventListener('change', resetAndRender);
+  productFilter?.addEventListener('change', resetAndRender);
+  dateFilter?.addEventListener('change', resetAndRender);
+  sortFilter?.addEventListener('change', resetAndRender);
 
   // Quick filter chips click handlers
   document.querySelectorAll('#quickFilterChips .chip').forEach((chip) => {
@@ -467,8 +801,7 @@ function initializeReviewFilters() {
       document.querySelectorAll('#quickFilterChips .chip').forEach((c) => c.classList.remove('active'));
       chip.classList.add('active');
       currentQuickFilter = chip.dataset.filter || 'all';
-      document.body.dataset.reviewPage = '1';
-      renderReviewsTable(getReviews());
+      resetAndRender();
     });
   });
 }

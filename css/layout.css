@@ -161,6 +161,22 @@ body.theme-dark .brand-logo {
   color: var(--primary);
 }
 
+.nav-count-pill {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 0.4rem;
+  border-radius: var(--radius-full);
+  background: var(--warning-soft);
+  border: 1px solid var(--warning-border);
+  color: var(--warning);
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .sidebar-footer {
   display: flex;
   align-items: center;

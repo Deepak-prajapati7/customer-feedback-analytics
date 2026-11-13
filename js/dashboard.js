@@ -72,6 +72,13 @@ function renderDashboard() {
     `).join('');
   }
 
+  const sidebarPendingBadge = document.getElementById('sidebarPendingReviewsCount');
+  if (sidebarPendingBadge) {
+    const pendingCount = reviews.filter((r) => r.responseStatus === 'pending').length;
+    sidebarPendingBadge.textContent = pendingCount;
+    sidebarPendingBadge.classList.toggle('hidden', pendingCount === 0);
+  }
+
   renderTrendChart(filtered);
   renderSentimentChart(filtered);
   renderRatingChart(filtered);
@@ -264,9 +271,13 @@ function renderTrendChart(reviews) {
 
   const monthlyData = Array.from({ length: 6 }, (_, idx) => {
     const date = new Date();
+    date.setDate(1);
     date.setMonth(date.getMonth() - (5 - idx));
     const label = date.toLocaleDateString('en-US', { month: 'short' });
-    const count = reviews.filter((review) => new Date(review.createdAt).getMonth() === date.getMonth() && new Date(review.createdAt).getFullYear() === date.getFullYear()).length;
+    const count = reviews.filter((review) => {
+      const d = new Date(review.createdAt);
+      return d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear();
+    }).length;
     return { label, count };
   });
 
@@ -321,7 +332,8 @@ function renderTrendChart(reviews) {
           },
           y: {
             beginAtZero: true,
-            ticks: { precision: 0, color: isDark ? '#94a3b8' : '#64748b' },
+            max: 12,
+            ticks: { stepSize: 2, precision: 0, color: isDark ? '#94a3b8' : '#64748b' },
             grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)' },
             border: { display: false }
           }
@@ -465,7 +477,7 @@ function renderRatingChart(reviews) {
     window.chartInstances.rating = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['1 Star ★', '2 Stars ★', '3 Stars ★', '4 Stars ★', '5 Stars ★'],
+        labels: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
         datasets: [{
           data: counts,
           backgroundColor: ['#f43f5e', '#fb923c', '#94a3b8', '#60a5fa', '#10b981'],
@@ -485,7 +497,8 @@ function renderRatingChart(reviews) {
           },
           y: {
             beginAtZero: true,
-            ticks: { precision: 0, color: isDark ? '#94a3b8' : '#64748b' },
+            max: 10,
+            ticks: { stepSize: 1, precision: 0, color: isDark ? '#94a3b8' : '#64748b' },
             grid: { color: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)' },
             border: { display: false }
           }
@@ -651,11 +664,11 @@ function renderRecentReviews(reviews) {
     const initial = (review.customerName || 'A').charAt(0).toUpperCase();
     const colorIndex = (review.customerName || 'A').charCodeAt(0) % 6;
     return `
-      <div class="recent-review-row" role="row">
+      <div class="recent-review-row clickable-review-row" role="row" tabindex="0" data-id="${escapeHtml(review.id)}" title="Click to inspect, edit, or reply">
         <div class="recent-review-customer" role="cell">
           <span class="review-identity tone-${colorIndex}">${escapeHtml(initial)}</span>
           <span class="recent-review-name">
-            <strong>${escapeHtml(review.customerName || 'Customer')}</strong>
+            <strong>${escapeHtml(review.customerName || 'Customer')} ${review.editedAt ? '<span class="edited-pill">Edited</span>' : ''}</strong>
             <small>${escapeHtml(review.product || 'Feedback')}</small>
           </span>
         </div>
@@ -671,6 +684,21 @@ function renderRecentReviews(reviews) {
       </div>
     `;
   }).join('');
+
+  container.querySelectorAll('.clickable-review-row').forEach((row) => {
+    const openTarget = () => {
+      if (typeof openReviewModal !== 'function') return;
+      const match = getReviews().find((item) => item.id === row.dataset.id);
+      if (match) openReviewModal(match);
+    };
+    row.addEventListener('click', openTarget);
+    row.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openTarget();
+      }
+    });
+  });
 }
 
 function renderInsights(reviews) {
@@ -722,6 +750,24 @@ function renderKeywordInsights(reviews) {
   negativeKeywordsEl.innerHTML = negative.length ? negative.map((item) => `<span class="tag-chip chip-negative"><i class="fa-solid fa-arrow-trend-down"></i> ${item.word} (${item.count})</span>`).join('') : '<span class="tag-chip">No data yet</span>';
 }
 
+function handleNotificationReviewAction(notificationId, reviewId) {
+  const notifications = getNotifications().map((item) => item.id === notificationId ? { ...item, unread: false } : item);
+  saveNotifications(notifications);
+  renderNotificationList();
+  renderNotificationCenter();
+  updateNotificationBadge();
+
+  if (!reviewId) return;
+  const targetReview = getReviews().find((item) => item.id === reviewId);
+  if (!targetReview) return;
+
+  document.querySelector('.nav-item[data-target="reviews-view"]')?.click();
+  document.querySelector('.notification-wrapper')?.classList.remove('open');
+  if (typeof openReviewModal === 'function') {
+    openReviewModal(targetReview);
+  }
+}
+
 function renderNotificationCenter() {
   const container = document.getElementById('notificationCenterList');
   if (!container) return;
@@ -738,16 +784,22 @@ function renderNotificationCenter() {
         <strong>${escapeHtml(notification.title)}</strong>
         <p>${escapeHtml(notification.message)}</p>
       </div>
-      <button class="text-btn" data-id="${notification.id}">Mark read</button>
+      <div class="action-group">
+        ${notification.reviewId ? `<button class="secondary-btn notification-review-btn" data-notif-id="${escapeHtml(notification.id)}" data-review-id="${escapeHtml(notification.reviewId)}">Review</button>` : ''}
+        <button class="text-btn" data-id="${escapeHtml(notification.id)}">Mark read</button>
+      </div>
     </div>
   `).join('');
 
+  container.querySelectorAll('.notification-review-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      handleNotificationReviewAction(button.dataset.notifId, button.dataset.reviewId);
+    });
+  });
+
   container.querySelectorAll('[data-id]').forEach((button) => {
     button.addEventListener('click', () => {
-      const notifications = getNotifications().map((item) => item.id === button.dataset.id ? { ...item, unread: false } : item);
-      saveNotifications(notifications);
-      renderNotificationCenter();
-      updateNotificationBadge();
+      handleNotificationReviewAction(button.dataset.id, '');
     });
   });
 }
@@ -775,17 +827,22 @@ function renderNotificationList() {
         <strong>${escapeHtml(notification.title)}</strong>
         <p>${escapeHtml(notification.message)}</p>
       </div>
-      <button class="text-btn small" data-id="${notification.id}">Read</button>
+      <div class="action-group">
+        ${notification.reviewId ? `<button class="text-btn small notification-review-btn" data-notif-id="${escapeHtml(notification.id)}" data-review-id="${escapeHtml(notification.reviewId)}">Open</button>` : ''}
+        <button class="text-btn small" data-id="${escapeHtml(notification.id)}">Read</button>
+      </div>
     </div>
   `).join('');
 
+  list.querySelectorAll('.notification-review-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      handleNotificationReviewAction(button.dataset.notifId, button.dataset.reviewId);
+    });
+  });
+
   list.querySelectorAll('[data-id]').forEach((button) => {
     button.addEventListener('click', () => {
-      const notifications = getNotifications().map((item) => item.id === button.dataset.id ? { ...item, unread: false } : item);
-      saveNotifications(notifications);
-      renderNotificationList();
-      renderNotificationCenter();
-      updateNotificationBadge();
+      handleNotificationReviewAction(button.dataset.id, '');
     });
   });
 }
@@ -868,5 +925,35 @@ document.addEventListener('DOMContentLoaded', () => {
     updateNotificationBadge();
     initializeReviewFilters();
     renderReviewsTable(getReviews());
+
+    let lastAdminSnapshot = `${localStorage.getItem(STORAGE_KEYS.reviews) || ''}|${localStorage.getItem(STORAGE_KEYS.notifications) || ''}|${localStorage.getItem(STORAGE_KEYS.settings) || ''}`;
+
+    const syncAdminWorkspaceIfChanged = () => {
+      const nextSnapshot = `${localStorage.getItem(STORAGE_KEYS.reviews) || ''}|${localStorage.getItem(STORAGE_KEYS.notifications) || ''}|${localStorage.getItem(STORAGE_KEYS.settings) || ''}`;
+      if (nextSnapshot === lastAdminSnapshot) return;
+      lastAdminSnapshot = nextSnapshot;
+
+      const nextSettings = getSettings();
+      if (typeof applyThemeSelection === 'function') {
+        applyThemeSelection(document.body, document.getElementById('themeToggle'), nextSettings.theme || 'light');
+      }
+      renderDashboard();
+      renderReviewsTable(getReviews());
+      renderNotificationList();
+      renderNotificationCenter();
+      updateNotificationBadge();
+      if (typeof renderComplaints === 'function') renderComplaints();
+      if (typeof renderReportSummary === 'function') renderReportSummary();
+    };
+
+    window.addEventListener('storage', (event) => {
+      if (![STORAGE_KEYS.reviews, STORAGE_KEYS.notifications, STORAGE_KEYS.settings].includes(event.key)) return;
+      syncAdminWorkspaceIfChanged();
+    });
+    window.addEventListener('pageshow', syncAdminWorkspaceIfChanged);
+    window.addEventListener('focus', syncAdminWorkspaceIfChanged);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) syncAdminWorkspaceIfChanged();
+    });
   }
 });

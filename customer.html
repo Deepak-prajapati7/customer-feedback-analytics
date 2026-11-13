@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FeedbackPro | Customer Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/customer.css" />
+  </head>
+  <body data-page="customer" class="theme-light">
+    <div class="customer-portal-shell">
+      <header class="customer-topbar">
+        <div class="customer-brand">
+          <a href="customer.html" class="customer-brand-link" aria-label="FeedbackPro Customer Portal">
+            <img
+              class="brand-logo"
+              src="assets/images/FeedbackPro%20Analytics%20Logo.png"
+              alt="FeedbackPro - Collect, Analyze, Improve"
+              width="200"
+              height="64"
+            />
+          </a>
+          <span class="portal-badge"><i class="fa-solid fa-store"></i> Customer Portal</span>
+        </div>
+
+        <nav class="portal-nav-tabs" aria-label="Customer portal navigation">
+          <button type="button" class="portal-tab active" data-portal-tab="browse">
+            <i class="fa-solid fa-comments"></i>
+            <span>Browse Reviews</span>
+            <span class="portal-tab-count" id="portalBrowseCount">0</span>
+          </button>
+          <button type="button" class="portal-tab" data-portal-tab="write">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>Write a Review</span>
+          </button>
+          <button type="button" class="portal-tab" data-portal-tab="mine">
+            <i class="fa-solid fa-user-check"></i>
+            <span>My Reviews</span>
+            <span class="portal-tab-count" id="portalMineCount">0</span>
+          </button>
+        </nav>
+
+        <div class="customer-header-actions">
+          <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle theme">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <div id="customerHeaderAuth" class="customer-auth-controls"></div>
+        </div>
+      </header>
+
+      <main class="customer-main">
+        <section class="customer-hero card">
+          <div class="customer-hero-copy">
+            <p class="eyebrow">Customer Voice &amp; Reviews</p>
+            <h1 id="portalHeroTitle">Share your experience &amp; explore verified reviews</h1>
+            <p id="portalHeroSubtitle">
+              Rate our products, share detailed feedback, and track official responses from our team.
+            </p>
+            <div class="customer-hero-cta">
+              <button type="button" class="primary-btn" id="heroWriteReviewBtn">
+                <i class="fa-solid fa-star"></i> Write a Review
+              </button>
+              <button type="button" class="secondary-btn" id="heroMyReviewsBtn">
+                <i class="fa-solid fa-clock-rotate-left"></i> Track My Reviews
+              </button>
+            </div>
+          </div>
+          <div class="customer-hero-stats" id="portalHeroStats"></div>
+        </section>
+
+        <!-- View 1: Browse Community Reviews -->
+        <section class="portal-view active" id="portalBrowseView">
+          <div class="portal-product-strip" id="portalProductStrip"></div>
+
+          <div class="card portal-filters-card">
+            <div class="portal-filter-grid">
+              <div class="portal-search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="portalSearchInput" placeholder="Search reviews, products, or keywords..." />
+              </div>
+              <select id="portalRatingFilter" aria-label="Filter by rating">
+                <option value="all">All ratings</option>
+                <option value="5">5 Stars ★</option>
+                <option value="4">4 Stars ★</option>
+                <option value="3">3 Stars ★</option>
+                <option value="2">2 Stars ★</option>
+                <option value="1">1 Star ★</option>
+              </select>
+              <select id="portalCategoryFilter" aria-label="Filter by category">
+                <option value="all">All categories</option>
+              </select>
+              <select id="portalResponseFilter" aria-label="Filter by team response">
+                <option value="all">All responses</option>
+                <option value="responded">Team responded</option>
+                <option value="pending">Awaiting reply</option>
+              </select>
+              <select id="portalSortFilter" aria-label="Sort reviews">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="rating-high">Highest rating</option>
+                <option value="rating-low">Lowest rating</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="portal-reviews-grid" id="portalReviewsGrid"></div>
+          <div class="pagination portal-pagination card" id="portalPagination"></div>
+        </section>
+
+        <!-- View 2: Write a New Review -->
+        <section class="portal-view" id="portalWriteView">
+          <div class="card portal-write-card">
+            <div class="section-header compact-header">
+              <div>
+                <p class="eyebrow">Submit Feedback</p>
+                <h2>Write a product review</h2>
+                <p class="section-description">Your feedback helps us improve our products and customer experience.</p>
+              </div>
+            </div>
+
+            <form id="portalReviewForm" class="portal-review-form">
+              <div class="form-grid">
+                <div class="input-group">
+                  <label for="portalCustomerName">Your name</label>
+                  <input id="portalCustomerName" type="text" placeholder="Enter your full name" required />
+                </div>
+                <div class="input-group">
+                  <label for="portalCustomerEmail">Email address</label>
+                  <input id="portalCustomerEmail" type="email" placeholder="you@example.com" required />
+                </div>
+                <div class="input-group">
+                  <label for="portalProductSelect">Product or service</label>
+                  <select id="portalProductSelect" required>
+                    <option value="">Select a product</option>
+                    <option value="SmartHub Pro">SmartHub Pro</option>
+                    <option value="InsightFlow">InsightFlow</option>
+                    <option value="Nexa CRM">Nexa CRM</option>
+                    <option value="DeliverLoop">DeliverLoop</option>
+                    <option value="PulseDesk">PulseDesk</option>
+                    <option value="Luna Support">Luna Support</option>
+                    <option value="__custom__">Other product...</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label for="portalCategorySelect">Feedback category</label>
+                  <select id="portalCategorySelect" required>
+                    <option value="">Select category</option>
+                    <option value="Product Quality">Product Quality</option>
+                    <option value="Customer Service">Customer Service</option>
+                    <option value="Delivery">Delivery</option>
+                    <option value="Pricing">Pricing</option>
+                    <option value="Website Experience">Website Experience</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="input-group hidden" id="portalCustomProductGroup">
+                <label for="portalCustomProduct">Product or service name</label>
+                <input id="portalCustomProduct" type="text" placeholder="Enter the product name" />
+              </div>
+
+              <div class="rating-panel">
+                <div class="rating-panel-header">
+                  <label>Overall rating</label>
+                  <span class="rating-feedback-text" id="portalRatingFeedbackText">Click a star to rate your experience</span>
+                </div>
+                <div class="star-rating" id="portalStarRating">
+                  <button type="button" class="star-btn" data-value="1" aria-label="1 star"><i class="fa-regular fa-star"></i></button>
+                  <button type="button" class="star-btn" data-value="2" aria-label="2 stars"><i class="fa-regular fa-star"></i></button>
+                  <button type="button" class="star-btn" data-value="3" aria-label="3 stars"><i class="fa-regular fa-star"></i></button>
+                  <button type="button" class="star-btn" data-value="4" aria-label="4 stars"><i class="fa-regular fa-star"></i></button>
+                  <button type="button" class="star-btn" data-value="5" aria-label="5 stars"><i class="fa-regular fa-star"></i></button>
+                </div>
+                <input type="hidden" id="portalRatingValue" value="0" />
+              </div>
+
+              <div class="input-group">
+                <label for="portalReviewTitle">Review title</label>
+                <input id="portalReviewTitle" type="text" maxlength="80" placeholder="Summarize your experience in a short headline" required />
+                <div class="counter"><span id="portalTitleCounter">0</span>/80</div>
+              </div>
+
+              <div class="input-group">
+                <label for="portalReviewText">Detailed review</label>
+                <textarea id="portalReviewText" rows="5" maxlength="500" placeholder="Share what went well or what could be improved..." required></textarea>
+                <div class="counter"><span id="portalReviewCounter">0</span>/500</div>
+                <div class="sentiment-live-pill" id="portalSentimentLivePill">
+                  <span class="pill-dot"></span>
+                  <span id="portalSentimentLiveText">Local sentiment: Start typing your review...</span>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label>Would you recommend us?</label>
+                <div class="recommendation-cards" id="portalRecommendationCards">
+                  <label class="recom-option active">
+                    <input type="radio" name="portalRecommendation" value="Yes" checked />
+                    <span class="recom-card-content"><i class="fa-solid fa-thumbs-up"></i> Yes, highly</span>
+                  </label>
+                  <label class="recom-option">
+                    <input type="radio" name="portalRecommendation" value="Maybe" />
+                    <span class="recom-card-content"><i class="fa-solid fa-hand"></i> Maybe</span>
+                  </label>
+                  <label class="recom-option">
+                    <input type="radio" name="portalRecommendation" value="No" />
+                    <span class="recom-card-content"><i class="fa-solid fa-thumbs-down"></i> No</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-actions portal-form-actions">
+                <button type="button" class="secondary-btn" id="portalCancelWriteBtn">Back to Reviews</button>
+                <button class="primary-btn submit-btn" id="portalSubmitBtn" type="submit">
+                  <span class="btn-text"><i class="fa-solid fa-paper-plane"></i> Publish Review</span>
+                  <span class="btn-loader hidden"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- View 3: My Reviews -->
+        <section class="portal-view" id="portalMineView">
+          <div class="card my-reviews-lookup-bar" id="myReviewsLookupBar">
+            <div class="lookup-info">
+              <strong><i class="fa-solid fa-envelope-open-text"></i> Your review activity</strong>
+              <p id="myReviewsEmailStatus">Enter your email address below to view reviews you submitted and any team responses.</p>
+            </div>
+            <form id="myReviewsLookupForm" class="lookup-form">
+              <input id="myReviewsEmailInput" type="email" placeholder="Enter your email (e.g. ava@example.com)" />
+              <button type="submit" class="secondary-btn">Find My Reviews</button>
+              <button type="button" class="primary-btn" id="mineWriteReviewBtn"><i class="fa-solid fa-plus"></i> New Review</button>
+            </form>
+          </div>
+
+          <div class="portal-reviews-grid" id="portalMyReviewsGrid"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/sentiment.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/analytics.js"></script>
+    <script src="js/customer.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
+

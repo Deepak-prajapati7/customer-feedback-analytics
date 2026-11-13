@@ -11,6 +11,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('feedbackForm');
   const sentimentLivePill = document.getElementById('sentimentLivePill');
   const sentimentLiveText = document.getElementById('sentimentLiveText');
+  const dashboardLink = document.getElementById('feedbackDashboardLink');
+  const authState = typeof ensureAuth === 'function' ? ensureAuth() : { isLoggedIn: false };
+  const isAdminSession = Boolean(authState.isLoggedIn && (authState.role || 'admin') === 'admin');
+
+  if (dashboardLink && !isAdminSession) {
+    dashboardLink.classList.add('hidden');
+  }
+
+  const savedProfile = typeof getCustomerProfile === 'function' ? getCustomerProfile() : { name: '', email: '' };
+  const prefillName = authState.isLoggedIn && authState.role === 'customer' ? authState.name : savedProfile.name;
+  const prefillEmail = authState.isLoggedIn && authState.role === 'customer' ? authState.email : savedProfile.email;
+  const nameField = document.getElementById('customerName');
+  const emailField = document.getElementById('email');
+  if (nameField && prefillName && !nameField.value) nameField.value = prefillName;
+  if (emailField && prefillEmail && !emailField.value) emailField.value = prefillEmail;
 
   const ratingLabels = {
     1: '★ 1 - Poor experience',
@@ -76,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Real-time AI sentiment analyzer
   reviewText?.addEventListener('input', () => {
     const text = reviewText.value.trim();
-    if (reviewCounter) reviewCounter.textContent = text.length;
+    if (reviewCounter) reviewCounter.textContent = reviewText.value.length;
 
     if (!sentimentLivePill || !sentimentLiveText) return;
 
@@ -124,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       const sentiment = analyzeSentiment(reviewTextValue, rating);
       const newReview = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         customerName,
         email,
         product,
@@ -155,7 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const notifications = getNotifications();
       notifications.unshift({
-        id: crypto.randomUUID(),
+        id: generateId(),
+        reviewId: newReview.id,
         title: 'New customer review',
         message: `${customerName} added a ${sentiment.sentiment.toLowerCase()} review for ${product}.`,
         unread: true,
@@ -174,9 +190,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (sentimentLivePill) sentimentLivePill.className = 'sentiment-live-pill';
       if (sentimentLiveText) sentimentLiveText.textContent = 'Local sentiment: Start typing your review...';
 
+      if (!isAdminSession && typeof saveCustomerProfile === 'function') {
+        saveCustomerProfile({ name: customerName, email });
+      }
+
       showToast('Thank you! Your feedback has been submitted successfully.', 'success');
       setTimeout(() => {
-        window.location.href = 'index.html';
+        window.location.href = isAdminSession ? 'index.html' : 'customer.html';
       }, 950);
     }, 750);
   });

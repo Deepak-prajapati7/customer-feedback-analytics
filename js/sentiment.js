@@ -81,9 +81,9 @@ function analyzeSentiment(text, rating) {
 }
 
 function getSentimentClass(label) {
-  if (label === 'Positive') return 'badge-positive';
-  if (label === 'Negative') return 'badge-negative';
-  return 'badge-neutral';
+  if (label === 'Positive') return 'badge badge-positive';
+  if (label === 'Negative') return 'badge badge-negative';
+  return 'badge badge-neutral';
 }
 
 function getSentimentSummary(reviews) {

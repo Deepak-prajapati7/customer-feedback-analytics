@@ -65,7 +65,7 @@ function createComplaintsFromReviews() {
     const priority = analysis.urgent ? 'Urgent' : Number(review.rating) <= 2 ? 'High' : 'Medium';
     const topic = analysis.topics[0];
     return {
-      id: crypto.randomUUID(),
+      id: generateId(),
       reviewId: review.id,
       title: review.reviewTitle || `${topic || 'Customer'} complaint`,
       description: review.reviewText || '',
@@ -162,7 +162,7 @@ function normalizeImportedRow(row, index) {
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) errors.push('rating must be 1–5');
   if (row.createdAt && Number.isNaN(date.getTime())) errors.push('date is invalid');
   const review = {
-    id: crypto.randomUUID(),
+    id: generateId(),
     customerName: String(row.customerName || 'Anonymous').trim(),
     email: String(row.email || '').trim(),
     product: String(row.product || 'Unspecified').trim(),

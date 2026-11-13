@@ -23,17 +23,22 @@
               height="80"
             />
           </h1>
-          <p>Enterprise Customer Analytics Portal</p>
+          <p>Enterprise Customer Analytics &amp; Review Portal</p>
           <div class="auth-feature-tags">
             <span><i class="fa-solid fa-wand-magic-sparkles"></i> AI Sentiment</span>
             <span><i class="fa-solid fa-chart-line"></i> Analytics</span>
-            <span><i class="fa-solid fa-reply"></i> Triage & Reply</span>
+            <span><i class="fa-solid fa-comments"></i> Customer Portal</span>
           </div>
         </div>
 
-        <button type="button" class="instant-demo-btn" id="instantDemoBtn">
-          <i class="fa-solid fa-bolt"></i> One-Click Demo Login
-        </button>
+        <div class="dual-demo-actions">
+          <button type="button" class="instant-demo-btn" id="instantDemoBtn">
+            <i class="fa-solid fa-user-shield"></i> Admin Demo Login
+          </button>
+          <button type="button" class="instant-customer-btn" id="instantCustomerDemoBtn">
+            <i class="fa-solid fa-user-check"></i> Customer Portal Demo
+          </button>
+        </div>
 
         <div class="auth-divider"><span>or sign in manually</span></div>
 
@@ -44,11 +49,11 @@
 
         <form id="loginForm" class="auth-form active">
           <div class="input-group">
-            <label>Email address</label>
+            <label for="loginEmail">Email address</label>
             <input type="email" id="loginEmail" value="admin@feedbackpro.io" required />
           </div>
           <div class="input-group">
-            <label>Password</label>
+            <label for="loginPassword">Password</label>
             <div class="password-input-wrap">
               <input type="password" id="loginPassword" value="admin123" required />
               <button type="button" class="password-toggle-btn" id="toggleLoginPassword" aria-label="Toggle password visibility">
@@ -56,18 +61,31 @@
               </button>
             </div>
           </div>
-          <button class="primary-btn block-btn" type="submit">Sign In to Dashboard</button>
+          <button class="primary-btn block-btn" type="submit">Sign In</button>
           <a class="link-btn inline-link" href="#" id="forgotPasswordLink">Forgot password?</a>
         </form>
 
         <form id="signupForm" class="auth-form">
           <div class="input-group">
-            <label>Full name</label>
-            <input type="text" id="signupName" placeholder="Jane Admin" required />
+            <label>Account portal</label>
+            <div class="role-selector" id="signupRoleSelector">
+              <label class="role-option active">
+                <input type="radio" name="signupRole" value="customer" checked />
+                <span><i class="fa-solid fa-star"></i> Customer Portal</span>
+              </label>
+              <label class="role-option">
+                <input type="radio" name="signupRole" value="admin" />
+                <span><i class="fa-solid fa-user-shield"></i> Admin Workspace</span>
+              </label>
+            </div>
+          </div>
+          <div class="input-group">
+            <label for="signupName">Full name</label>
+            <input type="text" id="signupName" placeholder="Alex Customer" required />
           </div>
           <div class="input-group">
             <label for="signupEmail">Email</label>
-            <input type="email" id="signupEmail" placeholder="jane@company.com" autocomplete="email" required />
+            <input type="email" id="signupEmail" placeholder="alex@company.com" autocomplete="email" required />
           </div>
           <div class="input-group">
             <label for="signupPassword">Password</label>
@@ -83,9 +101,12 @@
 
         <div class="demo-info">
           <strong>Demo credentials</strong>
-          <p>Email: admin@feedbackpro.io</p>
-          <p>Password: admin123</p>
+          <p><b>Admin:</b> admin@feedbackpro.io / admin123</p>
+          <p><b>Customer:</b> customer@feedbackpro.io / customer123</p>
           <small>This is a frontend-only demo. It is not secure production authentication.</small>
+          <a class="guest-portal-link" href="customer.html">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Public Customer Portal as Guest
+          </a>
         </div>
       </div>
     </div>

@@ -9,8 +9,12 @@
 /* ==========================================================================
    Large Tablets & Compact Desktops (max-width: 1200px)
    ========================================================================== */
-@media (max-width: 1200px) {
+@media (max-width: 1100px) {
   .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .charts-grid.dashboard-charts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -60,6 +64,8 @@
     padding: 1.25rem 1.25rem 2.5rem;
   }
 
+  .charts-grid,
+  .charts-grid.dashboard-charts,
   .chart-grid {
     grid-template-columns: 1fr;
   }

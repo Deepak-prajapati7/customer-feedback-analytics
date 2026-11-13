@@ -4,17 +4,18 @@ FeedbackPro AI is a static HTML/CSS/vanilla JavaScript dashboard. It runs withou
 
 ## Demo authentication
 
-Use the demo admin account below:
+Use either of the demo accounts below from `login.html`:
 
-- Email: admin@feedbackpro.io
-- Password: admin123
+- **Admin workspace**: `admin@feedbackpro.io` / `admin123` (opens `index.html`)
+- **Customer portal**: `customer@feedbackpro.io` / `customer123` (opens `customer.html`, also accessible directly as a guest)
 
 This is demo-only client-side authentication, not secure production authentication. Sign-up creates a browser session only; passwords and user accounts are not sent to or persisted by a server. Do not use real credentials or sensitive customer information.
 
 ## Features
 
+- Dedicated Customer Portal (`customer.html`) where customers can browse community reviews, filter by product/rating, write new reviews, and track admin updates & replies
+- Admin Review Management (`index.html`) with full review editing (name, email, product, category, star rating, recommendation, title, text, response status, and reply), reply composer, and CSV export
 - Responsive dashboard with KPI cards, trends, ratings, sentiment, date and category filters
-- Review form and searchable, sortable review management with CSV export
 - Local rule-based sentiment, topic and urgency analysis with explanations and suggested follow-up
 - Evidence-linked Insights Copilot answers based on the current browser dataset
 - Complaint tracking with priority, assignment and resolution status

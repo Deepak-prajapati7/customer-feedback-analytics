@@ -39,15 +39,12 @@
             <button class="nav-item" data-target="reviews-view">
               <i class="fa-solid fa-star"></i>
               <span>Reviews</span>
+              <span class="nav-count-pill hidden" id="sidebarPendingReviewsCount" title="Reviews awaiting admin response">0</span>
             </button>
             <button class="nav-item" data-target="complaints-view">
               <i class="fa-solid fa-life-ring"></i>
               <span>Complaint tracking</span>
             </button>
-            <a class="nav-item" href="feedback.html">
-              <i class="fa-solid fa-square-plus"></i>
-              <span>Add feedback</span>
-            </a>
           </div>
           <div class="nav-group">
             <span class="nav-group-label">Insights</span>
@@ -99,22 +96,22 @@
           <div class="topbar-left">
             <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></button>
             <div>
-              <div class="breadcrumbs">Home / Dashboard</div>
-              <h1 id="pageTitle">Dashboard</h1>
+              <div class="breadcrumbs">Home / Overview</div>
+              <h1 id="pageTitle">Overview</h1>
             </div>
           </div>
 
           <div class="topbar-actions">
             <div class="searchbox">
               <i class="fa-solid fa-magnifying-glass"></i>
-              <input id="globalSearch" type="text" placeholder="Search feedback, customers, products..." />
+              <input id="globalSearch" type="text" placeholder="Search feedback, customers, pr..." />
               <kbd class="search-kbd">⌘K</kbd>
             </div>
 
             <div class="notification-wrapper">
               <button class="icon-btn" id="notificationBtn" aria-label="Notifications">
                 <i class="fa-solid fa-bell"></i>
-                <span class="badge notification-badge" id="notificationBadge">0</span>
+                <span class="badge notification-badge" id="notificationBadge">2</span>
               </button>
               <div class="notification-dropdown" id="notificationDropdown">
                 <div class="dropdown-header">
@@ -157,8 +154,8 @@
               <div class="welcome-message">
                 <div>
                   <p class="eyebrow">Reporting period</p>
-                  <h2>Customer feedback summary</h2>
-                  <p>Key performance indicators for the selected date range.</p>
+                  <h2>Good afternoon, Admin <span class="wave-emoji">👋</span></h2>
+                  <p>30 customer reviews analyzed in this period • 3.5/5.0 average rating</p>
                 </div>
               </div>
               <div class="date-filter-wrap">
@@ -166,8 +163,8 @@
                 <select id="dateRangeFilter">
                   <option value="today">Today</option>
                   <option value="7">Last 7 days</option>
-                  <option value="30" selected>Last 30 days</option>
-                  <option value="90">Last 90 days</option>
+                  <option value="30">Last 30 days</option>
+                  <option value="90" selected>Last 90 days</option>
                   <option value="custom">Custom date range</option>
                 </select>
               </div>

@@ -1,0 +1,610 @@
+/* ==========================================================================
+   FeedbackPro Customer Portal Styles (customer.html)
+   ========================================================================== */
+
+.customer-portal-shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.customer-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.85rem max(1.5rem, calc((100% - 1220px) / 2));
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow-xs);
+}
+
+.customer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.customer-brand-link .brand-logo {
+  width: 158px;
+  max-height: 44px;
+  height: auto;
+  object-fit: contain;
+}
+
+.portal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: var(--radius-full);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-border);
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.portal-nav-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--card-soft);
+  border: 1px solid var(--line);
+}
+
+.portal-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.portal-tab:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+}
+
+.portal-tab.active {
+  background: var(--card);
+  border-color: var(--line);
+  color: var(--primary);
+  box-shadow: var(--shadow-xs);
+}
+
+.portal-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-full);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.customer-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.customer-auth-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.customer-session-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.25rem 0.7rem 0.25rem 0.3rem;
+  border-radius: var(--radius-full);
+  background: var(--card-soft);
+  border: 1px solid var(--line);
+}
+
+.customer-avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 0.8rem;
+}
+
+.customer-session-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.customer-session-meta strong {
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.customer-session-meta small {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.customer-main {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Hero Banner */
+.customer-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.75rem;
+  background:
+    radial-gradient(ellipse at 92% 16%, rgba(99, 102, 241, 0.16), transparent 44%),
+    linear-gradient(135deg, color-mix(in srgb, var(--card) 92%, #4f46e5) 0%, var(--card) 100%);
+}
+
+body.theme-dark .customer-hero {
+  background:
+    radial-gradient(ellipse at 92% 16%, rgba(129, 140, 248, 0.22), transparent 45%),
+    linear-gradient(135deg, #171330 0%, #111827 100%);
+}
+
+.customer-hero-copy h1 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.5vw, 1.95rem);
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+.customer-hero-copy p:not(.eyebrow) {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  max-width: 54ch;
+}
+
+.customer-hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.2rem;
+}
+
+.customer-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.hero-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-xs);
+}
+
+.hero-stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.hero-stat-value {
+  font-size: 1.45rem;
+  font-weight: 750;
+  color: var(--text);
+  line-height: 1.15;
+}
+
+.hero-stat-value small {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.hero-stat-sub {
+  font-size: 0.73rem;
+  color: var(--muted);
+}
+
+/* Portal Views */
+.portal-view {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+  animation: pageFadeIn 0.2s ease;
+}
+
+.portal-view.active {
+  display: flex;
+}
+
+/* Product Pill Filter Strip */
+.portal-product-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.portal-product-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.portal-product-pill:hover {
+  border-color: var(--primary-border);
+  background: var(--card-soft);
+  transform: translateY(-1px);
+}
+
+.portal-product-pill.active {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.portal-product-pill small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.portal-product-pill strong {
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: var(--card-soft);
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.portal-product-pill.active strong {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+/* Filter Toolbar */
+.portal-filters-card {
+  padding: 0.95rem 1.1rem;
+}
+
+.portal-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.8fr) repeat(4, minmax(130px, 1fr));
+  gap: 0.75rem;
+}
+
+.portal-search-wrap {
+  position: relative;
+}
+
+.portal-search-wrap i {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+}
+
+.portal-search-wrap input {
+  padding-left: 2.35rem;
+}
+
+/* Reviews Cards Grid */
+.portal-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.portal-review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.portal-review-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.portal-review-card.is-own-review {
+  border-color: var(--primary-border);
+}
+
+.portal-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.portal-card-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.portal-card-rating strong {
+  color: var(--text);
+}
+
+.own-review-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.portal-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.portal-card-body {
+  flex: 1;
+}
+
+.portal-card-body h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.portal-card-body p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.portal-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.portal-admin-reply {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--primary) 6%, var(--card-soft));
+  border: 1px solid var(--primary-border);
+}
+
+.portal-reply-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.76rem;
+}
+
+.portal-reply-header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.portal-reply-header small {
+  color: var(--muted);
+}
+
+.portal-admin-reply p {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.portal-pagination {
+  border-top: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+/* Write a Review Card */
+.portal-write-card {
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.portal-review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.portal-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+/* My Reviews Lookup Bar */
+.my-reviews-lookup-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.15rem 1.25rem;
+}
+
+.lookup-info strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text);
+}
+
+.lookup-info p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.lookup-form {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.lookup-form input {
+  width: 260px;
+  max-width: 100%;
+}
+
+.portal-empty-span {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2.5rem 1.5rem;
+}
+
+.portal-empty-span i {
+  font-size: 1.75rem;
+  color: var(--primary);
+  opacity: 0.75;
+}
+
+.portal-empty-span p {
+  margin: 0;
+  max-width: 48ch;
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+/* Responsive */
+@media (max-width: 1040px) {
+  .portal-reviews-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portal-filter-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .portal-search-wrap {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 820px) {
+  .customer-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-topbar {
+    padding: 0.85rem 1rem;
+  }
+
+  .portal-nav-tabs {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .portal-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 0.5rem 0.55rem;
+    font-size: 0.76rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .portal-reviews-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .customer-hero-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .customer-session-meta {
+    display: none;
+  }
+
+  .portal-write-card {
+    padding: 1.25rem;
+  }
+
+  .lookup-form {
+    width: 100%;
+  }
+
+  .lookup-form input {
+    width: 100%;
+  }
+}
+

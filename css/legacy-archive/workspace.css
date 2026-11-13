@@ -586,3 +586,241 @@ body.theme-dark .welcome-card {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Admin Review Editing & Portal Auth Enhancements
+   ========================================================================== */
+.action-btn-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.65rem;
+  border-radius: var(--radius-md);
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--card-soft);
+  border: 1px solid var(--line);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.action-btn-edit:hover {
+  background: var(--warning-soft);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: var(--warning);
+  transform: translateY(-1px);
+}
+
+.edited-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.35rem;
+  padding: 0.14rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: var(--warning-soft);
+  color: var(--warning);
+  font-size: 0.65rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.modal-review-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.modal-review-title-row .modal-review-title {
+  margin: 0;
+}
+
+.modal-edit-trigger {
+  min-height: 32px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.76rem;
+}
+
+.edit-modal-header {
+  padding-right: 2.5rem;
+}
+
+.edit-review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.edit-rating-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.48rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--card-soft);
+}
+
+.edit-star-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.edit-star-btn {
+  background: transparent;
+  border: 0;
+  padding: 0.15rem;
+  font-size: 1.2rem;
+  color: var(--line-strong);
+  cursor: pointer;
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.edit-star-btn:hover {
+  transform: scale(1.12);
+}
+
+.edit-star-btn.active {
+  color: #f59e0b;
+}
+
+.edit-rating-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.edit-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.clickable-review-row {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.clickable-review-row:hover {
+  background: var(--card-soft);
+}
+
+/* Login Dual Demo & Role Selector */
+.auth-header .brand-logo {
+  object-position: center center;
+}
+
+.dual-demo-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 1.15rem 0 0.85rem;
+}
+
+.dual-demo-actions .instant-demo-btn {
+  margin: 0;
+  font-size: 0.78rem;
+  padding: 0.5rem 0.65rem;
+}
+
+.instant-customer-btn {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: var(--primary-gradient);
+  border: 0;
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.5rem 0.65rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  transition: all var(--transition-fast);
+}
+
+.instant-customer-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.42);
+}
+
+.role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.role-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.58rem 0.65rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--card-soft);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.role-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.role-option span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.role-option.active {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.guest-portal-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+  width: 100%;
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--primary-border);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.guest-portal-link:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+@media (max-width: 480px) {
+  .dual-demo-actions {
+    grid-template-columns: 1fr;
+  }
+}
