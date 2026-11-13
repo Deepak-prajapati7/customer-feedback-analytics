@@ -1,6 +1,6 @@
 /**
  * FeedbackPro Master Design System Bundle
- * Generated: 2026-11-13T16:34:58.957Z
+ * Generated: 2026-11-13T16:41:58.860Z
  * Modules: tokens, base, layout, components, views, pages, customer, responsive
  */
 
@@ -754,6 +754,39 @@ body.theme-dark .brand-logo {
   display: flex;
   align-items: center;
   gap: 0.65rem;
+}
+
+.portal-header-btn {
+  gap: 0.45rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  background: var(--card-soft);
+  color: var(--primary);
+  border-color: var(--primary-border);
+  padding: 0.35rem 0.75rem;
+}
+
+.portal-header-btn:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.portal-badge-sm {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: var(--muted-light);
+  opacity: 0.8;
+}
+
+.portal-nav-link:hover .portal-badge-sm {
+  color: var(--primary);
+  opacity: 1;
+}
+
+.portal-admin-link {
+  font-weight: 600;
+  border-radius: var(--radius-full);
 }
 
 /* Search Box with Cmd+K Badge */
