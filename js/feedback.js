@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnText) btnText.classList.add('hidden');
     if (btnLoader) btnLoader.classList.remove('hidden');
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const sentiment = analyzeSentiment(reviewTextValue, rating);
       const newReview = {
         id: generateId(),
@@ -178,6 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
         createdAt: new Date().toISOString()
       });
       saveNotifications(notifications);
+
+      if (typeof syncCreateReview === 'function') {
+        await syncCreateReview(newReview);
+      }
 
       if (btnText) btnText.classList.remove('hidden');
       if (btnLoader) btnLoader.classList.add('hidden');

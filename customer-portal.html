@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FeedbackPro | Customer Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+    <link rel="stylesheet" href="css/enterprise.css" />
+    <link rel="stylesheet" href="css/customer-portal.css" />
+  </head>
+  <body data-page="customer-portal" class="theme-light cp-body">
+    <div class="cp-topbar-wrap">
+      <header class="cp-header">
+        <div class="cp-brand">
+          <img
+            class="brand-logo"
+            src="assets/images/FeedbackPro%20Analytics%20Logo.png"
+            alt="FeedbackPro - Collect, Analyze, Improve"
+            width="240"
+            height="80"
+          />
+          <span class="cp-portal-pill">
+            <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
+            Customer Portal
+          </span>
+        </div>
+
+        <nav class="cp-nav-tabs" id="cpNavTabs" aria-label="Customer portal sections" hidden>
+          <button type="button" class="cp-nav-tab active" data-cp-tab="send">
+            <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i>
+            <span>Write Feedback</span>
+          </button>
+          <button type="button" class="cp-nav-tab" data-cp-tab="history">
+            <i class="fa-regular fa-comments" aria-hidden="true"></i>
+            <span>My Feedback</span>
+            <span class="cp-tab-count" id="cpSubmissionCount" hidden>0</span>
+          </button>
+        </nav>
+
+        <div class="cp-header-actions">
+          <div class="cp-user-pill" id="cpUserPill" hidden>
+            <span class="cp-user-avatar" id="cpUserAvatar">C</span>
+            <div class="cp-user-meta">
+              <strong id="cpUserName">Customer</strong>
+              <small id="cpUserEmail">customer@feedbackpro.io</small>
+            </div>
+          </div>
+
+          <button class="icon-btn" id="cpThemeToggle" type="button" aria-label="Toggle color theme">
+            <i class="fa-solid fa-moon" aria-hidden="true"></i>
+          </button>
+
+          <button class="secondary-btn cp-logout-btn" id="cpLogoutBtn" type="button" hidden>
+            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+      </header>
+    </div>
+
+    <div class="cp-shell">
+      <main class="cp-main">
+        <!-- Customer Login / Sign Up Gate -->
+        <section class="cp-auth-section" id="cpAuthSection">
+          <div class="cp-auth-grid">
+            <aside class="cp-auth-showcase" aria-label="Customer portal benefits">
+              <div class="cp-showcase-top">
+                <span class="cp-showcase-badge">
+                  <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                  Customer Feedback Portal
+                </span>
+                <h1>Your voice shapes what we build next.</h1>
+                <p>Sign in once to share product feedback, highlight support experiences, and follow direct replies from our team.</p>
+              </div>
+
+              <div class="cp-showcase-list">
+                <div class="cp-showcase-item">
+                  <span class="cp-showcase-icon"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                  <div>
+                    <strong>Under 60 seconds</strong>
+                    <p>Rate your experience and send structured feedback without friction.</p>
+                  </div>
+                </div>
+                <div class="cp-showcase-item">
+                  <span class="cp-showcase-icon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span>
+                  <div>
+                    <strong>Instant admin delivery</strong>
+                    <p>Submissions appear directly on the Admin Portal for immediate team review.</p>
+                  </div>
+                </div>
+                <div class="cp-showcase-item">
+                  <span class="cp-showcase-icon"><i class="fa-solid fa-reply" aria-hidden="true"></i></span>
+                  <div>
+                    <strong>Track every team reply</strong>
+                    <p>View pending and responded feedback anytime under your account.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="cp-showcase-metrics">
+                <div><strong>6</strong><span>Products covered</span></div>
+                <div><strong>24h</strong><span>Typical reply</span></div>
+                <div><strong>100%</strong><span>Reviewed by team</span></div>
+              </div>
+            </aside>
+
+            <div class="card cp-auth-card">
+              <div class="cp-auth-intro">
+                <p class="eyebrow">Customer access</p>
+                <h2>Sign in to write feedback</h2>
+                <p>Use your customer account or try the one-click demo login below.</p>
+              </div>
+
+              <button type="button" class="instant-demo-btn cp-demo-login-btn" id="cpDemoLoginBtn">
+                <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+                One-Click Demo Customer Login
+              </button>
+
+              <div class="auth-divider"><span>or sign in with email</span></div>
+
+              <div class="auth-toggle" role="tablist" aria-label="Customer authentication mode">
+                <button type="button" class="auth-tab active" data-cp-auth-tab="login" role="tab" aria-selected="true">Customer Login</button>
+                <button type="button" class="auth-tab" data-cp-auth-tab="signup" role="tab" aria-selected="false">Create Account</button>
+              </div>
+
+              <div class="cp-form-error" id="cpAuthError" role="alert" hidden></div>
+
+              <form id="cpLoginForm" class="auth-form active" novalidate>
+                <div class="input-group">
+                  <label for="cpLoginEmail">Email address</label>
+                  <div class="cp-input-icon-wrap">
+                    <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                    <input type="email" id="cpLoginEmail" value="customer@feedbackpro.io" autocomplete="email" required />
+                  </div>
+                </div>
+                <div class="input-group">
+                  <label for="cpLoginPassword">Password</label>
+                  <div class="password-input-wrap cp-input-icon-wrap">
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    <input type="password" id="cpLoginPassword" value="customer123" autocomplete="current-password" required />
+                    <button type="button" class="password-toggle-btn" id="cpToggleLoginPassword" aria-label="Toggle password visibility">
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+                <button class="primary-btn block-btn cp-auth-submit" type="submit">
+                  <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+                  Sign In &amp; Write Feedback
+                </button>
+              </form>
+
+              <form id="cpSignupForm" class="auth-form" novalidate>
+                <div class="input-group">
+                  <label for="cpSignupName">Full name</label>
+                  <div class="cp-input-icon-wrap">
+                    <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    <input type="text" id="cpSignupName" placeholder="Priya Sharma" maxlength="80" autocomplete="name" required />
+                  </div>
+                </div>
+                <div class="input-group">
+                  <label for="cpSignupEmail">Email address</label>
+                  <div class="cp-input-icon-wrap">
+                    <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                    <input type="email" id="cpSignupEmail" placeholder="you@example.com" maxlength="120" autocomplete="email" required />
+                  </div>
+                </div>
+                <div class="input-group">
+                  <label for="cpSignupPassword">Password</label>
+                  <div class="password-input-wrap cp-input-icon-wrap">
+                    <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                    <input type="password" id="cpSignupPassword" placeholder="At least 6 characters" minlength="6" autocomplete="new-password" required />
+                    <button type="button" class="password-toggle-btn" id="cpToggleSignupPassword" aria-label="Toggle password visibility">
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+                <button class="primary-btn block-btn cp-auth-submit" type="submit">
+                  <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+                  Create Customer Account
+                </button>
+              </form>
+
+              <div class="demo-info">
+                <strong>Demo customer account</strong>
+                <p>Email: <code>customer@feedbackpro.io</code> &bull; Password: <code>customer123</code></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Authenticated Customer Portal -->
+        <div id="cpPortalSection" hidden>
+          <section class="cp-welcome-row" aria-label="Customer summary">
+            <div class="cp-hero">
+              <p class="cp-hero-eyebrow">Customer Workspace</p>
+              <h1 id="cpHeroTitle">Welcome! Share your experience</h1>
+              <p>Send feedback on any product or service and track replies directly from our support team.</p>
+            </div>
+
+            <div class="cp-stats-grid">
+              <div class="card cp-stat-card tone-primary">
+                <div class="cp-stat-top">
+                  <span>Feedback Sent</span>
+                  <span class="cp-stat-icon"><i class="fa-regular fa-paper-plane" aria-hidden="true"></i></span>
+                </div>
+                <strong id="cpStatTotal">0</strong>
+                <small>Under your account</small>
+              </div>
+              <div class="card cp-stat-card tone-green">
+                <div class="cp-stat-top">
+                  <span>Team Replies</span>
+                  <span class="cp-stat-icon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+                </div>
+                <strong id="cpStatReplied">0</strong>
+                <small>Responded by team</small>
+              </div>
+              <div class="card cp-stat-card tone-amber">
+                <div class="cp-stat-top">
+                  <span>Awaiting Reply</span>
+                  <span class="cp-stat-icon"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+                </div>
+                <strong id="cpStatPending">0</strong>
+                <small>In review queue</small>
+              </div>
+            </div>
+          </section>
+
+          <section class="cp-view active" id="cpSendView">
+            <div class="cp-workspace-grid">
+              <div class="card cp-form-card" id="cpFormCard">
+                <div class="cp-form-card-header">
+                  <div>
+                    <p class="eyebrow">Write feedback</p>
+                    <h2>How was your experience?</h2>
+                  </div>
+                  <span class="cp-secure-badge">
+                    <i class="fa-solid fa-database" aria-hidden="true"></i> Synced to Team
+                  </span>
+                </div>
+
+                <div class="cp-form-error" id="cpFormError" role="alert" hidden></div>
+
+                <form id="cpFeedbackForm" novalidate>
+                  <div class="cp-step-block">
+                    <div class="cp-step-label"><span>1</span> Contact &amp; Product Details</div>
+                    <div class="form-grid">
+                      <div class="input-group">
+                        <label for="cpCustomerName">Your name <span class="cp-required">*</span></label>
+                        <div class="cp-input-icon-wrap">
+                          <i class="fa-regular fa-user" aria-hidden="true"></i>
+                          <input id="cpCustomerName" name="customerName" type="text" maxlength="80" placeholder="Enter your full name" autocomplete="name" required />
+                        </div>
+                      </div>
+
+                      <div class="input-group">
+                        <label for="cpEmail">Email address <span class="cp-required">*</span></label>
+                        <div class="cp-input-icon-wrap">
+                          <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                          <input id="cpEmail" name="email" type="email" maxlength="120" placeholder="you@example.com" autocomplete="email" required />
+                        </div>
+                      </div>
+
+                      <div class="input-group">
+                        <label for="cpProduct">Product or service <span class="cp-required">*</span></label>
+                        <div class="cp-input-icon-wrap">
+                          <i class="fa-solid fa-cube" aria-hidden="true"></i>
+                          <select id="cpProduct" name="product" required>
+                            <option value="">Select a product</option>
+                            <option value="SmartHub Pro">SmartHub Pro</option>
+                            <option value="InsightFlow">InsightFlow</option>
+                            <option value="Nexa CRM">Nexa CRM</option>
+                            <option value="DeliverLoop">DeliverLoop</option>
+                            <option value="PulseDesk">PulseDesk</option>
+                            <option value="Luna Support">Luna Support</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="input-group">
+                        <label for="cpCategory">Feedback category <span class="cp-required">*</span></label>
+                        <div class="cp-input-icon-wrap">
+                          <i class="fa-solid fa-tag" aria-hidden="true"></i>
+                          <select id="cpCategory" name="category" required>
+                            <option value="">Select a category</option>
+                            <option value="Product Quality">Product Quality</option>
+                            <option value="Customer Service">Customer Service</option>
+                            <option value="Delivery">Delivery</option>
+                            <option value="Pricing">Pricing</option>
+                            <option value="Website Experience">Website Experience</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="cp-step-block">
+                    <div class="cp-step-label"><span>2</span> Overall Rating</div>
+                    <div class="rating-panel cp-rating-card" id="cpRatingCard">
+                      <div class="rating-panel-header">
+                        <label id="cpRatingLabel">Rate your experience <span class="cp-required">*</span></label>
+                        <span class="rating-feedback-text" id="cpRatingText">Click a star to rate</span>
+                      </div>
+                      <div class="star-rating" id="cpStarRating" role="radiogroup" aria-labelledby="cpRatingLabel">
+                        <button type="button" class="star-btn" data-value="1" role="radio" aria-checked="false" aria-label="1 star"><i class="fa-regular fa-star"></i></button>
+                        <button type="button" class="star-btn" data-value="2" role="radio" aria-checked="false" aria-label="2 stars"><i class="fa-regular fa-star"></i></button>
+                        <button type="button" class="star-btn" data-value="3" role="radio" aria-checked="false" aria-label="3 stars"><i class="fa-regular fa-star"></i></button>
+                        <button type="button" class="star-btn" data-value="4" role="radio" aria-checked="false" aria-label="4 stars"><i class="fa-regular fa-star"></i></button>
+                        <button type="button" class="star-btn" data-value="5" role="radio" aria-checked="false" aria-label="5 stars"><i class="fa-regular fa-star"></i></button>
+                      </div>
+                      <input type="hidden" id="cpRatingValue" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="cp-step-block">
+                    <div class="cp-step-label"><span>3</span> Tell Us More</div>
+                    <div class="input-group">
+                      <label for="cpReviewTitle">Feedback title <span class="cp-required">*</span></label>
+                      <input id="cpReviewTitle" name="reviewTitle" type="text" maxlength="80" placeholder="Summarize your experience in one line" required />
+                      <div class="counter"><span id="cpTitleCounter">0</span>/80</div>
+                    </div>
+
+                    <div class="input-group">
+                      <label for="cpReviewText">Detailed feedback <span class="cp-required">*</span></label>
+                      <textarea id="cpReviewText" name="reviewText" rows="5" maxlength="500" placeholder="Share specific details about what worked well or what we should improve..." required></textarea>
+                      <div class="cp-textarea-footer">
+                        <div class="cp-char-bar"><span id="cpReviewBar"></span></div>
+                        <div class="counter"><span id="cpReviewCounter">0</span>/500</div>
+                      </div>
+                    </div>
+
+                    <div class="input-group">
+                      <label>Would you recommend us?</label>
+                      <div class="recommendation-cards" id="cpRecommendationCards">
+                        <label class="recom-option recom-yes active">
+                          <input type="radio" name="cpRecommendation" value="Yes" checked />
+                          <span class="recom-card-content"><i class="fa-solid fa-thumbs-up" aria-hidden="true"></i> Yes, highly</span>
+                        </label>
+                        <label class="recom-option recom-maybe">
+                          <input type="radio" name="cpRecommendation" value="Maybe" />
+                          <span class="recom-card-content"><i class="fa-solid fa-hand" aria-hidden="true"></i> Maybe</span>
+                        </label>
+                        <label class="recom-option recom-no">
+                          <input type="radio" name="cpRecommendation" value="No" />
+                          <span class="recom-card-content"><i class="fa-solid fa-thumbs-down" aria-hidden="true"></i> No</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="cp-form-actions">
+                    <button class="primary-btn cp-submit-btn" id="cpSubmitBtn" type="submit">
+                      <span class="btn-text"><i class="fa-regular fa-paper-plane" aria-hidden="true"></i> Send Feedback</span>
+                      <span class="btn-loader hidden"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Sending...</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <div class="card cp-success-card" id="cpSuccessCard" hidden>
+                <div class="cp-success-icon" aria-hidden="true">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h2>Thank you for your feedback!</h2>
+                <p class="cp-success-subtitle" id="cpSuccessSubtitle">Your feedback has been delivered to our team.</p>
+
+                <div class="cp-success-summary" id="cpSuccessSummary"></div>
+
+                <div class="cp-success-actions">
+                  <button type="button" class="primary-btn" id="cpSendAnotherBtn">
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i> Send Another Feedback
+                  </button>
+                  <button type="button" class="secondary-btn" id="cpGoToHistoryBtn">
+                    <i class="fa-regular fa-comments" aria-hidden="true"></i> View My Feedback &amp; Replies
+                  </button>
+                </div>
+              </div>
+
+              <aside class="cp-sidebar-stack" aria-label="Live feedback preview and tips">
+                <div class="card cp-preview-card">
+                  <div class="cp-preview-head">
+                    <span><i class="fa-regular fa-eye" aria-hidden="true"></i> Live Card Preview</span>
+                    <span class="status-pill status-pending">Draft</span>
+                  </div>
+                  <div class="cp-preview-badges">
+                    <span class="product-badge" id="cpPreviewProduct"><i class="fa-solid fa-cube" aria-hidden="true"></i> Product</span>
+                    <span class="category-badge" id="cpPreviewCategory"><i class="fa-solid fa-tag" aria-hidden="true"></i> Category</span>
+                  </div>
+                  <div class="cp-preview-stars" id="cpPreviewStars">☆☆☆☆☆</div>
+                  <h3 class="cp-preview-title" id="cpPreviewTitle">Your feedback title will appear here</h3>
+                  <p class="cp-preview-text" id="cpPreviewText">Start typing your experience and see how your submission will appear to our team.</p>
+                  <div class="cp-preview-footer">
+                    <span id="cpPreviewAuthor">Customer</span>
+                    <span id="cpPreviewRecommend">Recommend: Yes</span>
+                  </div>
+                </div>
+
+                <div class="card cp-tips-card">
+                  <h3><i class="fa-regular fa-lightbulb" aria-hidden="true"></i> Tips for helpful feedback</h3>
+                  <ul>
+                    <li>Mention the specific product feature, order, or support interaction.</li>
+                    <li>Share what worked smoothly alongside anything that slowed you down.</li>
+                    <li>Check the <strong>My Feedback</strong> tab anytime to see our team's reply.</li>
+                  </ul>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="cp-view" id="cpHistoryView" hidden>
+            <div class="card cp-lookup-card">
+              <div class="cp-history-toolbar">
+                <div>
+                  <p class="eyebrow">Feedback status</p>
+                  <h2>My Submitted Feedback</h2>
+                  <p class="section-description">Track your submissions and read responses from our support team.</p>
+                </div>
+                <div class="cp-history-filters" id="cpHistoryFilters">
+                  <button type="button" class="chip active" data-cp-filter="all">All</button>
+                  <button type="button" class="chip" data-cp-filter="responded">Responded</button>
+                  <button type="button" class="chip" data-cp-filter="pending">Awaiting Reply</button>
+                </div>
+              </div>
+
+              <div class="cp-history-search-wrap">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                <input id="cpHistorySearch" type="text" placeholder="Filter your feedback by product, title, or keyword..." aria-label="Filter your feedback" />
+              </div>
+            </div>
+
+            <div class="cp-history-list" id="cpHistoryList"></div>
+          </section>
+        </div>
+      </main>
+
+      <footer class="cp-footer">
+        <span>FeedbackPro Customer Portal</span>
+        <span>&bull;</span>
+        <span>Your feedback helps us improve every day</span>
+      </footer>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/sentiment.js"></script>
+    <script src="js/customer-portal.js"></script>
+  </body>
+</html>

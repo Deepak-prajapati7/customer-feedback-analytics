@@ -248,6 +248,163 @@ function showToast(message, type = 'success') {
 
 ensureDemoData();
 
+const SERVER_STATE = {
+  version: null,
+  available: null,
+  syncPromise: null
+};
+
+async function apiRequest(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: 'same-origin',
+    cache: 'no-store',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    },
+    ...options
+  });
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    payload = null;
+  }
+  if (!response.ok) {
+    const err = new Error(payload?.error || `Request failed (${response.status})`);
+    err.status = response.status;
+    throw err;
+  }
+  return payload;
+}
+
+async function syncFromServer(notifyOnNewReviews = false) {
+  if (window.location.protocol === 'file:') {
+    SERVER_STATE.available = false;
+    return false;
+  }
+  if (SERVER_STATE.syncPromise) return SERVER_STATE.syncPromise;
+
+  SERVER_STATE.syncPromise = (async () => {
+    try {
+      const data = await apiRequest('/api/bootstrap', { method: 'GET' });
+      SERVER_STATE.available = true;
+      const previousCount = getStoredValue(STORAGE_KEYS.reviews, []).length;
+      const versionChanged = SERVER_STATE.version !== data.version;
+
+      if (versionChanged) {
+        if (Array.isArray(data.reviews)) {
+          setStoredValue(STORAGE_KEYS.reviews, data.reviews);
+        }
+        if (Array.isArray(data.notifications)) {
+          setStoredValue(STORAGE_KEYS.notifications, data.notifications);
+        }
+        if (Array.isArray(data.complaints)) {
+          setStoredValue('feedbackpro_complaints', data.complaints);
+        }
+
+        const hasNewReviews = Boolean(
+          notifyOnNewReviews &&
+          SERVER_STATE.version !== null &&
+          Array.isArray(data.reviews) &&
+          data.reviews.length > previousCount
+        );
+        SERVER_STATE.version = data.version;
+        window.dispatchEvent(new CustomEvent('feedbackpro:synced', { detail: { hasNewReviews } }));
+      }
+      return true;
+    } catch (error) {
+      if (SERVER_STATE.available === null) {
+        SERVER_STATE.available = false;
+      }
+      return false;
+    } finally {
+      SERVER_STATE.syncPromise = null;
+    }
+  })();
+
+  return SERVER_STATE.syncPromise;
+}
+
+async function pollServerSync() {
+  if (window.location.protocol === 'file:' || SERVER_STATE.available === false) return;
+  try {
+    const state = await apiRequest('/api/sync-state', { method: 'GET' });
+    SERVER_STATE.available = true;
+    if (state?.version && state.version !== SERVER_STATE.version) {
+      await syncFromServer(true);
+    }
+  } catch (error) {
+    // Ignore transient poll errors
+  }
+}
+
+async function syncBackendMutation(url, options) {
+  if (window.location.protocol === 'file:') return null;
+  try {
+    const result = await apiRequest(url, options);
+    SERVER_STATE.available = true;
+    await syncFromServer(false);
+    return result;
+  } catch (error) {
+    if (error.status === 404 || error.status === 405 || error.status === 501) {
+      SERVER_STATE.available = false;
+    }
+    return null;
+  }
+}
+
+function syncCreateReview(review) {
+  return syncBackendMutation('/api/reviews', { method: 'POST', body: JSON.stringify(review) });
+}
+
+function syncReplyReview(id, reply, customerName) {
+  return syncBackendMutation(`/api/reviews/${encodeURIComponent(id)}/reply`, {
+    method: 'POST',
+    body: JSON.stringify({ reply, customerName })
+  });
+}
+
+function syncToggleReviewStatus(id, responseStatus) {
+  return syncBackendMutation(`/api/reviews/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ responseStatus })
+  });
+}
+
+function syncDeleteReview(id) {
+  return syncBackendMutation(`/api/reviews/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+function syncClearReviews() {
+  return syncBackendMutation('/api/reviews', { method: 'DELETE' });
+}
+
+function syncResetSampleData() {
+  return syncBackendMutation('/api/admin/reset-sample', { method: 'POST', body: '{}' });
+}
+
+function syncImportReviews(reviews) {
+  return syncBackendMutation('/api/reviews/import', {
+    method: 'POST',
+    body: JSON.stringify({ reviews })
+  });
+}
+
+function syncMarkNotificationsRead(id = null) {
+  return syncBackendMutation('/api/notifications/read', {
+    method: 'POST',
+    body: JSON.stringify({ id })
+  });
+}
+
+function syncSaveComplaints(complaints) {
+  return syncBackendMutation('/api/complaints', {
+    method: 'PUT',
+    body: JSON.stringify({ complaints })
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   ensureDemoData();
 });
