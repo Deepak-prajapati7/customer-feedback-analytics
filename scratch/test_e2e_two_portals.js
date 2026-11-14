@@ -106,3 +106,4 @@ const path = require('path');
   console.log('--- Two Portals E2E Verification Complete: SUCCESS! ---');
   await browser.close();
 })();
+
