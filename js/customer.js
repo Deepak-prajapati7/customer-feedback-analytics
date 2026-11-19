@@ -602,6 +602,9 @@ function initWriteReviewForm() {
         btnLoader?.classList.add('hidden');
         return;
       }
+      if (typeof syncCreateReview === 'function') {
+        syncCreateReview(newReview);
+      }
 
       const auth = ensureAuth();
       if (!auth.isLoggedIn || auth.role !== 'admin') {

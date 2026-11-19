@@ -175,12 +175,15 @@ function renderReviewsTable(reviews) {
         </td>
         <td>
           <div class="table-actions">
-            <button class="action-btn-view view-review-btn" data-id="${escapeHtml(review.id)}" title="View & Reply">
-              <i class="fa-solid fa-reply"></i> Reply
-            </button>
-            <button class="action-btn-edit edit-review-btn" data-id="${escapeHtml(review.id)}" title="Edit review">
-              <i class="fa-regular fa-pen-to-square"></i> Edit
-            </button>
+            ${isResponded ? `
+              <button class="action-btn-view view-review-btn" data-id="${escapeHtml(review.id)}" data-action="edit" title="Edit response">
+                <i class="fa-regular fa-pen-to-square"></i> Edit
+              </button>
+            ` : `
+              <button class="action-btn-view view-review-btn" data-id="${escapeHtml(review.id)}" data-action="reply" title="Reply to review">
+                <i class="fa-solid fa-reply"></i> Reply
+              </button>
+            `}
             <button class="action-btn-delete delete-review-btn" data-id="${escapeHtml(review.id)}" title="Delete review">
               <i class="fa-regular fa-trash-can"></i>
             </button>
@@ -219,7 +222,7 @@ function renderReviewsTable(reviews) {
   tbody.querySelectorAll('.view-review-btn').forEach((button) => {
     button.addEventListener('click', () => {
       const review = getReviews().find((item) => item.id === button.dataset.id);
-      if (review) openReviewModal(review);
+      if (review) openReviewModal(review, { editResponse: button.dataset.action === 'edit' });
     });
   });
 
@@ -237,6 +240,7 @@ function renderReviewsTable(reviews) {
         const reviews = getReviews();
         const updated = reviews.filter((item) => item.id !== id);
         if (!saveReviews(updated)) return;
+        if (typeof syncDeleteReview === 'function') syncDeleteReview(id);
         showToast('Review removed from workspace.', 'success');
         renderReviewsTable(updated);
         if (typeof renderDashboard === 'function') renderDashboard();
@@ -246,7 +250,7 @@ function renderReviewsTable(reviews) {
   });
 }
 
-function openReviewModal(review) {
+function openReviewModal(review, options = {}) {
   const modal = document.getElementById('reviewModal');
   const content = document.getElementById('reviewModalBody');
   if (!modal || !content || !review) return;
@@ -425,6 +429,9 @@ function openReviewModal(review) {
       reviews[index].responseStatus = 'responded';
       reviews[index].replyDate = new Date().toISOString();
       if (!saveReviews(reviews)) return;
+      if (typeof syncReplyReview === 'function') {
+        syncReplyReview(review.id, text, review.customerName);
+      }
 
       // Add audit notification
       const notifications = getNotifications();
@@ -454,6 +461,9 @@ function openReviewModal(review) {
       const nextStatus = reviews[index].responseStatus === 'responded' ? 'pending' : 'responded';
       reviews[index].responseStatus = nextStatus;
       if (!saveReviews(reviews)) return;
+      if (typeof syncToggleReviewStatus === 'function') {
+        syncToggleReviewStatus(review.id, nextStatus);
+      }
       showToast(`Review status updated to ${nextStatus}.`, 'success');
       renderReviewsTable(getReviews());
       if (typeof renderDashboard === 'function') renderDashboard();
@@ -462,6 +472,20 @@ function openReviewModal(review) {
   });
 
   modal.classList.add('open');
+
+  if (options && options.editResponse) {
+    const composer = content.querySelector('#replyComposer');
+    if (composer) {
+      composer.classList.remove('collapsed');
+      setTimeout(() => {
+        const input = content.querySelector('#replyInput');
+        if (input) {
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+      }, 50);
+    }
+  }
 }
 
 function openEditReviewModal(review, options = {}) {
@@ -690,6 +714,12 @@ function openEditReviewModal(review, options = {}) {
     };
 
     if (!saveReviews(reviews)) return;
+    if (typeof syncBackendMutation === 'function') {
+      syncBackendMutation(`/api/reviews/${encodeURIComponent(review.id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      });
+    }
 
     // Keep any linked complaint record synchronized
     if (typeof getComplaints === 'function' && typeof saveComplaints === 'function') {

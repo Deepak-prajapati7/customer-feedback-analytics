@@ -1,0 +1,21 @@
+{
+  "name": "customer-feedback-analytics",
+  "version": "1.0.0",
+  "description": "Production-ready Customer Feedback Analytics & Management Platform with Admin and Customer Portals",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node scratch/test_backend.js"
+  },
+  "keywords": [
+    "feedback",
+    "analytics",
+    "customer-experience",
+    "nps",
+    "sentiment-analysis",
+    "dashboard"
+  ],
+  "author": "FeedbackPro Team",
+  "license": "MIT"
+}

@@ -405,6 +405,33 @@ function syncSaveComplaints(complaints) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   ensureDemoData();
+
+  if (window.location.protocol !== 'file:') {
+    try {
+      await syncFromServer(false);
+      setInterval(pollServerSync, 4000);
+    } catch (e) {
+      // Local fallback mode
+    }
+  }
+});
+
+window.addEventListener('feedbackpro:synced', (event) => {
+  if (typeof renderDashboard === 'function' && document.getElementById('dashboard-view')?.classList.contains('active')) {
+    renderDashboard();
+  }
+  if (typeof renderReviewsTable === 'function' && document.getElementById('reviews-view')?.classList.contains('active')) {
+    if (typeof getReviews === 'function') renderReviewsTable(getReviews());
+  }
+  if (typeof renderCustomerReviews === 'function') {
+    renderCustomerReviews();
+  }
+  if (typeof updateNotificationBadge === 'function') {
+    updateNotificationBadge();
+  }
+  if (typeof renderNotificationList === 'function') {
+    renderNotificationList();
+  }
 });

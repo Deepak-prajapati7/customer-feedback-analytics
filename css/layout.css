@@ -344,17 +344,31 @@ body.theme-dark .brand-logo {
   font-size: 0.85rem;
 }
 
-.searchbox input {
-  min-width: 0;
-  min-height: 0;
-  flex: 1;
-  border: 0;
-  padding: 0.2rem 0;
-  background: transparent;
-  color: var(--text);
-  font-size: 0.82rem;
+.searchbox input,
+.searchbox input[type="text"],
+.searchbox input[type="search"] {
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  width: 100% !important;
+  flex: 1 1 auto !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0.15rem 0.25rem !important;
+  background: transparent !important;
+  color: var(--text) !important;
+  font-size: 0.84rem !important;
   outline: none !important;
   box-shadow: none !important;
+}
+
+.searchbox input:focus,
+.searchbox input[type="text"]:focus,
+.searchbox input[type="search"]:focus {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 .searchbox input::placeholder {

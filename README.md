@@ -27,19 +27,53 @@ Sentiment and Copilot are deterministic local fallbacks, not a hosted LLM. They 
 
 ## Run locally
 
-From the project directory, start the static web server:
+### Option 1: Start Full Backend Server (Recommended)
+Run the Node.js backend server (zero external dependencies required):
 
+```bash
+npm start
+# or: node server.js
+```
+
+The backend server runs at `http://localhost:3000`:
+- **Admin Portal**: [http://localhost:3000/index.html](http://localhost:3000/index.html)
+- **Customer Feedback Portal**: [http://localhost:3000/customer.html](http://localhost:3000/customer.html)
+- **Login**: [http://localhost:3000/login.html](http://localhost:3000/login.html)
+- **Health Check**: [http://localhost:3000/api/health](http://localhost:3000/api/health)
+
+### Option 2: Static Server Mode
 ```bash
 python3 -m http.server 8000
 ```
-
 Then open `http://localhost:8000/login.html`.
 
-## Import format
+## Backend REST API Reference
 
-The first worksheet or CSV header row should contain `customerName` (also accepts `customer` or `name`), `email`, `product`, `category`, `rating` (1–5), `reviewTitle`, `reviewText` (also accepts `review`, `feedback`, `comment`, or `text`), and optionally `date`. Only review text and a valid rating are required. Imports are limited to 10 MB and 5,000 rows per file.
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Healthcheck and server status |
+| `GET` | `/api/bootstrap` | Initial seed and multi-tab state sync |
+| `GET` | `/api/sync-state` | Real-time version check for client polling |
+| `GET` | `/api/reviews` | List reviews with filters (`rating`, `status`, `product`, `search`, `sort`) |
+| `GET` | `/api/reviews/:id` | Fetch review by ID |
+| `POST` | `/api/reviews` | Submit new customer review (auto NLP sentiment & urgency scored) |
+| `PUT` | `/api/reviews/:id` | Update / edit review details |
+| `POST` | `/api/reviews/:id/reply` | Reply to review (updates status to responded, records date) |
+| `PATCH` | `/api/reviews/:id/status` | Toggle responseStatus (`pending` / `responded`) |
+| `DELETE` | `/api/reviews/:id` | Delete review record |
+| `DELETE` | `/api/reviews` | Clear all reviews |
+| `POST` | `/api/reviews/import` | Bulk import feedback rows |
+| `POST` | `/api/admin/reset-sample` | Reset database to initial sample dataset |
+| `GET` | `/api/analytics/summary` | Real-time KPIs (avg rating, NPS, response rate, distribution) |
+| `GET` | `/api/analytics/export/csv` | Download reviews as CSV directly from server |
+| `POST` | `/api/auth/login` | Authenticate admin or customer user |
+| `POST` | `/api/auth/register` | Register customer account |
+| `GET` | `/api/notifications` | List notifications with unread counts |
+| `POST` | `/api/notifications/read` | Mark notifications as read |
+| `GET`/`PUT` | `/api/complaints` | Fetch or update tracked escalation complaints |
+| `GET`/`PUT` | `/api/settings` | Fetch or update workspace settings |
 
-## Production requirements
+## Persistent Database Storage
 
-This repository does not include a backend, database, authorization service, or AI provider integration. Browser LocalStorage is per-browser and is not suitable for multi-user or production data. A production deployment needs a server-side authentication/session layer, tenant-scoped database and APIs, secure secret management, and an explicitly configured AI provider. No credentials or external AI service are configured by this project.
+The backend persists all records into `data/db.json` with safe atomic writes (`.tmp` write + rename) to protect data integrity. If `data/db.json` is deleted or reset, seed data is automatically re-generated on startup.
 # customer-feedback-analytics
